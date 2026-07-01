@@ -125,3 +125,47 @@ export function compareLevels(a, b) {
     ? { state: "talk", label: "Conversation" }
     : { state: "slow", label: "Move slowly here" };
 }
+
+// Gentle opening lines to help someone start a conversation about an item.
+// Adapts to the comfort level they've marked. Always an offer, never a demand,
+// and never scripts the other person. Returns { line, alt } or null.
+export function opener(item, level) {
+  if (!item || !level) return null;
+  const mid = item.charAt(0).toLowerCase() + item.slice(1); // mid-sentence
+  const cap = item; // items are already capitalized for sentence starts
+
+  switch (level) {
+    case "Not comfortable":
+      return {
+        line: `\u201cWhen it comes to ${mid}, this isn\u2019t something I\u2019m comfortable with right now \u2014 I\u2019d rather be honest than leave you guessing.\u201d`,
+        alt: "\u201cThat might change with time, but today a no is a kind answer, not a rejection.\u201d",
+      };
+    case "Maybe later":
+      return {
+        line: `\u201c${cap} is something I\u2019d like to get to eventually \u2014 just not yet. Can we come back to it?\u201d`,
+        alt: "\u201cNo timeline in mind. I just wanted you to know it\u2019s a \u2018not yet,\u2019 not a \u2018no.\u2019\u201d",
+      };
+    case "Open with conversation":
+      return {
+        line: `\u201cI\u2019m open to ${mid} \u2014 can we talk about what would make it feel easy and welcome for both of us?\u201d`,
+        alt: "\u201cNo pressure either way \u2014 I just didn\u2019t want to assume.\u201d",
+      };
+    case "Comfortable":
+      return {
+        line: `\u201cI feel good about ${mid}. I wanted to say so out loud so it isn\u2019t a question mark.\u201d`,
+        alt: "\u201cAnd if that ever shifts, I\u2019ll tell you \u2014 I\u2019d want the same from you.\u201d",
+      };
+    case "Very comfortable":
+      return {
+        line: `\u201c${cap} feels really easy and good for me \u2014 I\u2019m glad to share that with you.\u201d`,
+        alt: "\u201cStill always up for a check-in \u2014 comfort now doesn\u2019t skip the ask later.\u201d",
+      };
+    case UNSURE:
+      return {
+        line: `\u201cHonestly, I\u2019m still figuring out how I feel about ${mid}. Can we take it slow and check in as we go?\u201d`,
+        alt: "\u201cNot knowing yet is okay too \u2014 I\u2019d rather discover it than pretend.\u201d",
+      };
+    default:
+      return null;
+  }
+}
