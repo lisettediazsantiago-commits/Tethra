@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { COMFORT_CATEGORIES } from "../data/content";
+import { COMFORT_CATEGORIES, opener } from "../data/content";
 import Spectrum from "../components/Spectrum";
 import { IconLock, IconHeart, IconEye } from "../components/Icons";
 
@@ -14,6 +14,7 @@ export default function ComfortMap() {
   const [activeCat, setActiveCat] = useState(COMFORT_CATEGORIES[1].key); // physical, matches mockup
   const [openKey, setOpenKey] = useState(null);
   const [status, setStatus] = useState("");
+  const [copied, setCopied] = useState(false);
   const loaded = useRef(false);
 
   // Load once
@@ -57,7 +58,7 @@ export default function ComfortMap() {
       {/* Category tabs */}
       <div className="chips" style={{ marginBottom: 14 }}>
         {COMFORT_CATEGORIES.map((c) => (
-          <button key={c.key} className="chip" aria-pressed={c.key === activeCat} onClick={() => { setActiveCat(c.key); setOpenKey(null); }}>
+          <button key={c.key} className="chip" aria-pressed={c.key === activeCat} onClick={() => { setActiveCat(c.key); setOpenKey(null); setCopied(false); }}>
             {c.title}
           </button>
         ))}
@@ -72,12 +73,13 @@ export default function ComfortMap() {
         const k = keyOf(activeCat, item);
         const entry = map[k] || {};
         const open = openKey === k;
+        const tip = opener(item, entry.level);
         return (
           <div className={"card" + (open ? " selected" : "")} key={k} style={{ marginBottom: 10 }}>
             <button
               className="row-between"
               style={{ width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
-              onClick={() => setOpenKey(open ? null : k)}
+              onClick={() => { setOpenKey(open ? null : k); setCopied(false); }}
               aria-expanded={open}
             >
               <span className="small" style={{ fontWeight: 500 }}>{item}</span>
@@ -87,6 +89,7 @@ export default function ComfortMap() {
             <Spectrum value={entry.level || ""} onChange={(level) => update(k, { level })} />
 
             {open && (
+              <>
               <div className="why">
                 <label><IconLock width={12} height={12} /> Private note (only you)</label>
                 <textarea
@@ -114,6 +117,28 @@ export default function ComfortMap() {
                   </button>
                 </div>
               </div>
+
+              {tip && (
+                <div className="opener">
+                  <div className="opener-head">
+                    <span className="opener-label">Words to start this conversation</span>
+                    <button
+                      className="copy"
+                      onClick={() => {
+                        if (navigator.clipboard) navigator.clipboard.writeText(tip.line);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 1500);
+                      }}
+                    >
+                      {copied ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                  <p>{tip.line}</p>
+                  <p className="alt">{tip.alt}</p>
+                  <p className="note">These lines change to match where you are on the spectrum.</p>
+                </div>
+              )}
+              </>
             )}
           </div>
         );
