@@ -6,24 +6,35 @@ import { useAuth } from "../context/AuthContext";
 import { COMFORT_CATEGORIES } from "../data/content";
 import Icon from "../components/Icon";
 
+// Progress is measured against the CURRENT taxonomy only. Keys are `${cat}:${item}`.
+// Answers to retired items (e.g. the old physical-touch category, now moved to the
+// dedicated Intimacy section) may still sit in a user's saved document — those must
+// not count, or the percentage can climb past 100%.
+const TOTAL = COMFORT_CATEGORIES.reduce((n, c) => n + c.items.length, 0);
+const VALID_KEYS = new Set(
+  COMFORT_CATEGORIES.flatMap((c) => c.items.map((it) => `${c.key}:${it}`))
+);
+
 export default function Dashboard() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [mapped, setMapped] = useState(0);
-
-  const total = COMFORT_CATEGORIES.reduce((n, c) => n + c.items.length, 0);
 
   useEffect(() => {
     if (!user) return;
     getDoc(doc(db, "comfortMaps", user.uid)).then((snap) => {
       if (snap.exists()) {
         const items = snap.data().items || {};
-        setMapped(Object.values(items).filter((e) => e && e.level).length);
+        const count = Object.entries(items).filter(
+          ([k, e]) => VALID_KEYS.has(k) && e && e.level
+        ).length;
+        setMapped(count);
       }
     });
   }, [user]);
 
-  const pct = total ? Math.round((mapped / total) * 100) : 0;
+  // Clamp as a final safety net so the bar can never render wider than full.
+  const pct = TOTAL ? Math.min(100, Math.round((mapped / TOTAL) * 100)) : 0;
   const name = user?.displayName?.split(" ")[0] || "there";
 
   const links = [
