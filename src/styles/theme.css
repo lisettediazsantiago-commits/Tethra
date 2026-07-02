@@ -4,29 +4,55 @@
    sexualized, never a stoplight. Difference is an invitation, not a verdict.
 ------------------------------------------------------------------ */
 :root {
-  --plum-900: #4e2e52;
-  --plum-700: #5e3a61;
-  --plum-400: #8c5c8e;
-  --plum-100: #ebdcea;
+  /* ---- Canonical Tethra palette (single source of truth) ---- */
+  --tethra-plum:      #4B2E59;
+  --tethra-purple:    #6D4C7D;
+  --tethra-lavender:  #A78BBE;
+  --tethra-mist:      #EADCF2;
+  --tethra-sage:      #A7B99B;
+  --tethra-soft-sage: #D9E3D1;
+  --tethra-blush:     #F2C5C8;
+  --tethra-gold:      #D4A65A;
+  --tethra-cream:     #F4EEE6;
+  --tethra-gray:      #7D7B87;
 
-  --cream: #f6efe6;
-  --card: #fcf8f1;
+  /* Icon-internal accents (line colors baked into the library SVGs;
+     not part of the 10 core swatches, kept here so they're documented) */
+  --tethra-rose:      #C84F6B;  /* affection / connection line color */
+  --tethra-leaf:      #3F734D;  /* growth / boundaries line color */
 
-  --gold: #b08a3c;
-  --gold-soft: #f4ead5;
+  /* ---- Working aliases — every token below points at the canonical set ---- */
+  --plum-900: var(--tethra-plum);
+  --plum-700: var(--tethra-purple);
+  --plum-400: var(--tethra-lavender);
+  --plum-100: var(--tethra-mist);
+  --lavender: var(--tethra-mist);
 
-  --sage: #8fa891;
-  --sage-soft: #e7eee7;
+  --cream: var(--tethra-cream);
+  --card: #FCF9F4;                 /* near-white card, tuned off cream */
 
-  --blush: #d6a69c;
-  --blush-soft: #f3e7e3;
+  --gold: #C68F3C;                 /* eyebrow text — deepened for legibility */
+  --gold-icon: var(--tethra-gold); /* true library gold for icons/accents */
+  --gold-soft: #F7E7C6;
+
+  --sage: var(--tethra-sage);
+  --sage-soft: var(--tethra-soft-sage);
+  --leaf: var(--tethra-leaf);
+  --leaf-soft: var(--tethra-soft-sage);
+
+  --blush: var(--tethra-blush);
+  --blush-soft: #F9DDE2;
+  --rose: var(--tethra-rose);
+  --rose-soft: #F9DDE2;
+
+  --gray: var(--tethra-gray);
 
   --ink: #33302e;
-  --muted: #7a736e;
-  --faint: #9a928c;
+  --muted: #6f6674;
+  --faint: #948c9a;
 
-  --line: #e4d9c9;
-  --line-soft: #eadfce;
+  --line: #ece3ee;
+  --line-soft: #f1e9f2;
 
   --display: "Fraunces", Georgia, "Times New Roman", serif;
   --body: "Inter", system-ui, -apple-system, sans-serif;
@@ -194,16 +220,23 @@ button { font-family: var(--body); }
   color: var(--plum-700); display: flex; align-items: center; justify-content: center; font-size: 22px;
 }
 
-/* Bottom nav */
+/* Bottom nav — Option B: line icons, only the active tab gets a filled circle */
 .nav {
   position: sticky; bottom: 0; max-width: var(--shell); margin: 0 auto;
-  display: flex; justify-content: space-around; padding: 11px 6px calc(18px + env(safe-area-inset-bottom, 0px));
-  background: rgba(252,248,241,0.96); backdrop-filter: blur(6px);
+  display: flex; justify-content: space-around; padding: 9px 6px calc(14px + env(safe-area-inset-bottom, 0px));
+  background: rgba(252,249,244,0.96); backdrop-filter: blur(6px);
   border-top: 0.5px solid var(--line);
 }
-.nav a { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--faint); font-size: 10px; line-height: 1.2; }
-.nav a.active { color: var(--plum-700); font-weight: 600; }
-.nav svg { width: 20px; height: 20px; }
+.nav a { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--tethra-gray); font-size: 10px; line-height: 1.2; }
+.nav .navicon {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.18s ease;
+}
+.nav a.active { color: var(--tethra-purple); font-weight: 600; }
+.nav a.active .navicon { background: var(--tethra-purple); color: var(--tethra-cream); }
+.nav a:focus-visible { outline: none; }
+.nav a:focus-visible .navicon { outline: 3px solid var(--plum-400); outline-offset: 2px; }
 
 /* Safety banner + quick exit */
 .safety-note { margin-top: 20px; padding-top: 14px; border-top: 0.5px solid var(--line); font-size: 10px; color: var(--faint); display: flex; align-items: center; justify-content: center; gap: 6px; text-align: center; }
@@ -222,3 +255,85 @@ button { font-family: var(--body); }
 .link { color: var(--gold); cursor: pointer; text-decoration: underline; background: none; border: none; font-size: 12px; padding: 0; font-family: var(--body); }
 .badge { font-size: 11px; color: var(--faint); }
 a { color: var(--plum-700); }
+
+/* ------------------------------------------------------------------
+   Physical Intimacy Comfort — dedicated section styles
+------------------------------------------------------------------ */
+/* Soft circle wrapper for icons shown on cards / section headers */
+.cardico { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none; }
+.rowico { display: flex; align-items: center; gap: 11px; }
+
+/* Section entry hero */
+.intimacy-hero {
+  position: relative; border-radius: var(--radius); overflow: hidden;
+  padding: 18px 16px; margin-bottom: 14px;
+  background:
+    radial-gradient(120px 80px at 80% 26%, rgba(212,166,90,0.30), transparent 70%),
+    linear-gradient(160deg, #f3e7f6 0%, #efe4f0 42%, #f6eae6 100%);
+}
+.intimacy-hero .kicker { font-size: 10px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+.intimacy-hero h1 { margin: 6px 0 8px; }
+.intimacy-hero p { font-size: 12.5px; line-height: 1.6; color: #5b4d63; margin: 0; max-width: 260px; }
+
+/* Privacy assurance line */
+.assure { display: flex; align-items: flex-start; gap: 9px; background: rgba(255,255,255,0.65); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 11px 12px; margin-bottom: 14px; }
+.assure p { margin: 0; font-size: 11.5px; line-height: 1.55; color: var(--muted); }
+
+/* Category header inside a card */
+.icat-head { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
+.icat-head h3 { margin: 0; }
+.icat-head .sub { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+/* Item row (accordion trigger) */
+.iitem { display: flex; align-items: center; justify-content: space-between; width: 100%; background: none; border: none; padding: 12px 2px; cursor: pointer; text-align: left; border-top: 0.5px solid var(--line); }
+.iitem:first-of-type { border-top: none; }
+.iitem .name { font-size: 13px; font-weight: 500; color: var(--ink); }
+.iitem .meta { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--tethra-lavender); font-weight: 600; }
+
+/* 7-state radio list */
+.q-label { font-size: 12.5px; font-weight: 600; color: var(--plum-900); margin: 14px 2px 9px; }
+.istate { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--line); background: #fff; border-radius: 12px; padding: 10px 12px; font-size: 12.5px; color: var(--ink); cursor: pointer; margin-bottom: 7px; width: 100%; text-align: left; }
+.istate .dot { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid #d9cbdd; flex: none; }
+.istate.on { border-color: var(--tethra-purple); background: #f6eef8; font-weight: 600; color: var(--plum-900); }
+.istate.on .dot { background: var(--tethra-purple); border-color: var(--tethra-purple); box-shadow: inset 0 0 0 3px #f6eef8; }
+.istate:focus-visible { outline: 3px solid var(--plum-400); outline-offset: 2px; }
+
+/* Context multi-select */
+.ictx { display: flex; align-items: center; gap: 10px; border: 1.5px solid var(--line); background: #fff; border-radius: 12px; padding: 10px 12px; font-size: 12.5px; color: var(--ink); cursor: pointer; margin-bottom: 7px; width: 100%; text-align: left; }
+.ictx .chk { width: 18px; height: 18px; border-radius: 6px; border: 1.5px solid #d9cbdd; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; }
+.ictx.on { border-color: var(--tethra-sage); background: #f1f6ee; }
+.ictx.on .chk { background: var(--tethra-sage); border-color: var(--tethra-sage); }
+.ictx:focus-visible { outline: 3px solid var(--plum-400); outline-offset: 2px; }
+
+/* Visibility selector */
+.ivis { background: #f7f1f8; border: 1px solid #ebddee; border-radius: var(--radius-sm); padding: 12px 13px; margin-top: 4px; }
+.ivis .vh { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--plum-900); margin-bottom: 8px; }
+.ivopt { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; background: none; border: none; padding: 9px 4px; font-size: 12.5px; color: var(--muted); cursor: pointer; border-bottom: 1px solid #efe6f1; }
+.ivopt:last-child { border-bottom: none; }
+.ivopt .r { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid #d2c2d6; flex: none; }
+.ivopt.on { color: var(--plum-900); font-weight: 600; }
+.ivopt.on .r { background: var(--tethra-purple); border-color: var(--tethra-purple); box-shadow: inset 0 0 0 3px #f7f1f8; }
+.ivopt .badge { margin-left: auto; font-size: 9.5px; letter-spacing: .4px; color: var(--tethra-lavender); font-weight: 700; }
+.ivopt:focus-visible { outline: 3px solid var(--plum-400); outline-offset: 2px; border-radius: 8px; }
+
+/* Entry card linking into the section */
+.entry-card { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer; }
+.entry-card .grow { flex: 1; }
+.entry-card .grow .t { display: block; font-size: 13px; font-weight: 600; color: var(--plum-900); }
+.entry-card .grow .s { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ------------------------------------------------------------------
+   Landing — sunrise illustration backdrop
+------------------------------------------------------------------ */
+.landing { position: relative; overflow: hidden; }
+.landing-art {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 46%;
+  background-size: cover; background-position: center 30%;
+  opacity: 0.9; z-index: 0;
+}
+.landing-scrim {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 60%;
+  background: linear-gradient(to top, rgba(244,238,230,0) 0%, rgba(244,238,230,0.72) 42%, var(--cream) 82%);
+  z-index: 1;
+}
+.landing-body { position: relative; z-index: 2; }

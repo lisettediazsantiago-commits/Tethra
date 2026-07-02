@@ -1,17 +1,19 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { COMFORT_CATEGORIES, opener } from "../data/content";
 import Spectrum from "../components/Spectrum";
 import { IconLock, IconHeart, IconEye } from "../components/Icons";
+import Icon from "../components/Icon";
 
 const keyOf = (cat, item) => `${cat}:${item}`;
 
 export default function ComfortMap() {
   const { user } = useAuth();
   const [map, setMap] = useState({});
-  const [activeCat, setActiveCat] = useState(COMFORT_CATEGORIES[1].key); // physical, matches mockup
+  const [activeCat, setActiveCat] = useState(COMFORT_CATEGORIES[0].key);
   const [openKey, setOpenKey] = useState(null);
   const [status, setStatus] = useState("");
   const [copied, setCopied] = useState(false);
@@ -54,6 +56,16 @@ export default function ComfortMap() {
           Mark where you are today. You can change anything, anytime.
         </p>
       </div>
+
+      {/* Entry into the dedicated Physical Intimacy Comfort section */}
+      <Link to="/app/intimacy" className="card entry-card" style={{ marginBottom: 14, textDecoration: "none" }}>
+        <Icon name="intimacy" size={40} />
+        <span className="grow">
+          <span className="t">Physical Intimacy Comfort</span>
+          <span className="s">Private by default &middot; go at your own pace</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
+      </Link>
 
       {/* Category tabs */}
       <div className="chips" style={{ marginBottom: 14 }}>

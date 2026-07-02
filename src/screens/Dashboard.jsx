@@ -4,7 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { COMFORT_CATEGORIES } from "../data/content";
-import { IconArrow } from "../components/Icons";
+import Icon from "../components/Icon";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -27,11 +27,12 @@ export default function Dashboard() {
   const name = user?.displayName?.split(" ")[0] || "there";
 
   const links = [
-    { to: "/app/comfort-map", title: "Comfort map", sub: "Mark where you are today" },
-    { to: "/app/shared", title: "Shared space", sub: "Understand each other, gently" },
-    { to: "/app/check-in", title: "Consent check-in", sub: "Before or after time together" },
-    { to: "/blueprint", title: "Your blueprint", sub: "How you enter connection" },
-    { to: "/safety", title: "Safety & resources", sub: "Support, anytime" },
+    { to: "/app/comfort-map", icon: "comfort-map", title: "Comfort map", sub: "Mark where you are today" },
+    { to: "/app/intimacy", icon: "intimacy", title: "Physical intimacy comfort", sub: "Private by default \u00b7 at your pace" },
+    { to: "/app/shared", icon: "shared-space", title: "Shared space", sub: "Understand each other, gently" },
+    { to: "/app/check-in", icon: "check-in", title: "Consent check-in", sub: "Before or after time together" },
+    { to: "/blueprint", icon: "blueprint", title: "Your blueprint", sub: "How you enter connection" },
+    { to: "/safety", icon: "safety-resources", title: "Safety & resources", sub: "Support, anytime" },
   ];
 
   return (
@@ -58,13 +59,13 @@ export default function Dashboard() {
       <div className="spacer-sm" />
       <div className="stack">
         {links.map((l) => (
-          <button key={l.to} className="card row-between" style={{ width: "100%", cursor: "pointer", textAlign: "left" }} onClick={() => nav(l.to)}>
-            <span>
-              <span className="small" style={{ fontWeight: 500 }}>{l.title}</span>
-              <br />
-              <span className="tiny faint">{l.sub}</span>
+          <button key={l.to} className="card entry-card" style={{ marginBottom: 10 }} onClick={() => nav(l.to)}>
+            <Icon name={l.icon} size={40} />
+            <span className="grow">
+              <span className="t">{l.title}</span>
+              <span className="s">{l.sub}</span>
             </span>
-            <IconArrow width={18} height={18} />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
           </button>
         ))}
       </div>

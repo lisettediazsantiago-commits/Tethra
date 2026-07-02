@@ -62,6 +62,10 @@ export const COMFORT_LEVELS = [
 export const UNSURE = "Unsure / still learning";
 
 // The Comfort Map taxonomy.
+// NOTE: physical/intimate touch is intentionally NOT here — it lives in the
+// dedicated Physical Intimacy Comfort section (see INTIMACY_CATEGORIES below),
+// which uses a gentler 7-state scale and per-item privacy. The Comfort Map
+// links into it via an entry card so nothing is asked twice.
 export const COMFORT_CATEGORIES = [
   {
     key: "emotional",
@@ -70,14 +74,6 @@ export const COMFORT_CATEGORIES = [
       "Daily texting", "Deep conversations", "Sharing personal history",
       "Talking about past relationships", "Talking about trauma",
       "Discussing future hopes", "Exclusivity conversations",
-    ],
-  },
-  {
-    key: "physical",
-    title: "Physical affection",
-    items: [
-      "Sitting close", "Hugging", "Holding hands", "Cuddling",
-      "Kissing", "Touch in public", "Sleeping next to someone", "Sexual intimacy",
     ],
   },
   {
@@ -169,3 +165,74 @@ export function opener(item, level) {
       return null;
   }
 }
+
+// ------------------------------------------------------------------
+// Physical Intimacy Comfort — a dedicated, consent-first section.
+// Framed for self-awareness and clear communication, never as
+// "sexual preferences." Every item is private by default.
+// NOTE: overlaps with the existing "Physical affection" comfort
+// category (Sitting close / Hugging / Kissing…). Reconcile later so
+// people don't answer the same items twice.
+// ------------------------------------------------------------------
+
+export const INTIMACY_INTRO =
+  "Your comfort belongs to you. There are no right or wrong answers. " +
+  "Tethra is not here to encourage intimacy. It is here to support " +
+  "self-awareness, honest communication, mutual respect, and informed consent.";
+
+// A distinct scale — not the 5-point Comfort spectrum.
+export const INTIMACY_STATES = [
+  "Not comfortable",
+  "Maybe someday",
+  "Comfortable with discussion",
+  "Comfortable with someone I trust",
+  "Comfortable",
+  "I\u2019m still discovering this",
+  "Prefer not to answer",
+];
+
+export const INTIMACY_CONTEXTS = [
+  "We\u2019ve built emotional trust",
+  "We\u2019ve talked about it beforehand",
+  "I\u2019m the one initiating",
+  "We\u2019re in a committed relationship",
+  "I feel emotionally connected",
+  "It depends on the situation",
+  "I\u2019d rather discuss this together",
+];
+
+// Only `partner` ever exposes an item to a shared space. The other three
+// stay fully private and simply record the owner's intent.
+export const INTIMACY_VISIBILITY = [
+  { key: "only-me", label: "Only me", badge: "DEFAULT", sharesToPartner: false },
+  { key: "partner", label: "Share with partner", sharesToPartner: true },
+  { key: "discuss", label: "Share after we discuss together", sharesToPartner: false },
+  { key: "later", label: "Share later", sharesToPartner: false },
+];
+export const INTIMACY_DEFAULT_VISIBILITY = "only-me";
+
+export const INTIMACY_SECTION = { title: "Physical Intimacy Comfort", icon: "intimacy" };
+
+export const INTIMACY_CATEGORIES = [
+  {
+    key: "affection",
+    title: "Affection",
+    sub: "Everyday closeness",
+    icon: "affection",
+    items: ["Sitting close", "Holding hands", "Hugging", "Cuddling", "Kissing"],
+  },
+  {
+    key: "romantic",
+    title: "Romantic Intimacy",
+    sub: "Tender, connected moments",
+    icon: "connection",
+    items: ["Slow dancing", "Massage", "Sharing a bed", "Falling asleep together", "Bathing together"],
+  },
+  {
+    key: "sexual",
+    title: "Sexual Intimacy",
+    sub: "At your own pace, only if you choose",
+    icon: "consent",
+    items: ["Making out", "Mutual touch", "Oral sex", "Penetrative sex", "Trying new activities", "Discussing fantasies"],
+  },
+];
