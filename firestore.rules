@@ -23,6 +23,15 @@ service cloud.firestore {
       allow read, write: if isOwner(uid);
     }
 
+    // Physical Intimacy Comfort — the most sensitive data in the app.
+    // Owner-only, full stop. No partner can read this document.
+    // When partner sharing is built, exposure happens the same way as the
+    // rest of the app: the app copies ONLY items whose visibility == "partner"
+    // into a sharedSpace doc. The raw intimacyMaps document is never shared.
+    match /intimacyMaps/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
     // Relationship blueprint (one doc per user)
     match /blueprints/{uid} {
       allow read, write: if isOwner(uid);
