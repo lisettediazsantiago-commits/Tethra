@@ -1,85 +1,54 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../firebase";
-import { useAuth } from "../context/AuthContext";
-import { COMFORT_CATEGORIES } from "../data/content";
-import Icon from "../components/Icon";
+import { IconShield } from "../components/Icons";
 
-// Progress is measured against the CURRENT taxonomy only. Keys are `${cat}:${item}`.
-// Answers to retired items (e.g. the old physical-touch category, now moved to the
-// dedicated Intimacy section) may still sit in a user's saved document — those must
-// not count, or the percentage can climb past 100%.
-const TOTAL = COMFORT_CATEGORIES.reduce((n, c) => n + c.items.length, 0);
-const VALID_KEYS = new Set(
-  COMFORT_CATEGORIES.flatMap((c) => c.items.map((it) => `${c.key}:${it}`))
-);
+// NOTE FOR THE BUILDER: verify and localize these resources for your users'
+// region before launch. The numbers below are long-standing US services shown
+// as examples. Replace or add local equivalents as needed.
+const RESOURCES = [
+  { name: "988 Suicide & Crisis Lifeline (US)", detail: "Call or text 988 \u00b7 24/7" },
+  { name: "National Domestic Violence Hotline (US)", detail: "1-800-799-7233 \u00b7 24/7" },
+  { name: "RAINN (sexual assault, US)", detail: "1-800-656-4673 \u00b7 24/7" },
+];
 
-export default function Dashboard() {
-  const { user } = useAuth();
-  const nav = useNavigate();
-  const [mapped, setMapped] = useState(0);
-
-  useEffect(() => {
-    if (!user) return;
-    getDoc(doc(db, "comfortMaps", user.uid)).then((snap) => {
-      if (snap.exists()) {
-        const items = snap.data().items || {};
-        const count = Object.entries(items).filter(
-          ([k, e]) => VALID_KEYS.has(k) && e && e.level
-        ).length;
-        setMapped(count);
-      }
-    });
-  }, [user]);
-
-  // Clamp as a final safety net so the bar can never render wider than full.
-  const pct = TOTAL ? Math.min(100, Math.round((mapped / TOTAL) * 100)) : 0;
-  const name = user?.displayName?.split(" ")[0] || "there";
-
-  const links = [
-    { to: "/app/comfort-map", icon: "comfort-map", title: "Comfort map", sub: "Mark where you are today" },
-    { to: "/app/intimacy", icon: "intimacy", title: "Physical intimacy comfort", sub: "Private by default \u00b7 at your pace" },
-    { to: "/app/shared", icon: "shared-space", title: "Shared space", sub: "Understand each other, gently" },
-    { to: "/app/check-in", icon: "check-in", title: "Consent check-in", sub: "Before or after time together" },
-    { to: "/blueprint", icon: "blueprint", title: "Your blueprint", sub: "How you enter connection" },
-    { to: "/safety", icon: "safety-resources", title: "Safety & resources", sub: "Support, anytime" },
-  ];
-
+export default function Safety() {
   return (
     <div className="screen">
       <div className="head">
-        <p className="eyebrow">Welcome back</p>
-        <h1 className="display" style={{ marginTop: 6 }}>Hello, {name}</h1>
+        <div className="emblem" style={{ marginBottom: 12 }}><IconShield width={22} height={22} /></div>
+        <h1 className="display">Safety &amp; support</h1>
       </div>
 
       <div className="card">
-        <div className="row-between">
-          <span className="small" style={{ fontWeight: 500 }}>Your comfort map</span>
-          <span className="tiny faint">{pct}% mapped</span>
-        </div>
-        <div className="progress" style={{ marginTop: 10 }}>
-          <span style={{ width: `${pct}%` }} />
-        </div>
-        <p className="tiny muted" style={{ marginTop: 10 }}>
-          Growth here isn&rsquo;t &ldquo;progress toward intimacy.&rdquo; It can mean becoming clearer,
-          more open, or more protective of a boundary.
+        <p className="small" style={{ fontWeight: 500, marginTop: 0 }}>What Tethra is &mdash; and isn&rsquo;t</p>
+        <ul className="small muted" style={{ paddingLeft: 18, lineHeight: 1.7, margin: "8px 0 0" }}>
+          <li>Tethra is not a replacement for therapy, legal advice, or crisis support.</li>
+          <li>Tethra does not guarantee anyone&rsquo;s safety.</li>
+          <li>Consent must always be active, mutual, ongoing, and revocable.</li>
+          <li>A shared comfort map is not permission.</li>
+          <li>Anyone can change their mind at any time.</li>
+        </ul>
+      </div>
+
+      <div className="card" style={{ marginTop: 12 }}>
+        <p className="small" style={{ fontWeight: 500, marginTop: 0 }}>A &ldquo;yes&rdquo; here is not permanent permission.</p>
+        <p className="tiny muted" style={{ marginTop: 6 }}>
+          Anything you mark in Tethra is a starting point for conversation. Consent still needs to be
+          asked for, and freely given, in the moment.
         </p>
       </div>
 
       <div className="spacer-sm" />
-      <div className="stack">
-        {links.map((l) => (
-          <button key={l.to} className="card entry-card" style={{ marginBottom: 10 }} onClick={() => nav(l.to)}>
-            <Icon name={l.icon} size={40} />
-            <span className="grow">
-              <span className="t">{l.title}</span>
-              <span className="s">{l.sub}</span>
-            </span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
-          </button>
-        ))}
-      </div>
+      <p className="eyebrow" style={{ marginBottom: 8 }}>If you need support now</p>
+      {RESOURCES.map((r) => (
+        <div className="card" key={r.name} style={{ marginBottom: 10 }}>
+          <p className="small" style={{ fontWeight: 500, margin: 0 }}>{r.name}</p>
+          <p className="tiny muted" style={{ marginTop: 4 }}>{r.detail}</p>
+        </div>
+      ))}
+
+      <p className="tiny faint" style={{ marginTop: 14, lineHeight: 1.6 }}>
+        Tip: the &ldquo;Quick exit&rdquo; button at the top of every screen leaves Tethra immediately
+        for a neutral page.
+      </p>
     </div>
   );
 }
