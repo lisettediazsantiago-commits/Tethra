@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import sunrise from "../assets/sunrise.jpg";
 
 export default function Auth() {
   const [params] = useSearchParams();
@@ -33,7 +34,10 @@ export default function Auth() {
   }
 
   return (
-    <div className="screen">
+    <div className="screen center landing">
+      <div className="landing-art" style={{ backgroundImage: `url(${sunrise})` }} aria-hidden="true" />
+      <div className="landing-scrim" aria-hidden="true" />
+      <div className="landing-body">
       <div className="head center">
         <h1 className="display">{isSignup ? "Create your space" : "Welcome back"}</h1>
         <p className="small muted" style={{ marginTop: 6 }}>
@@ -70,6 +74,7 @@ export default function Auth() {
           {isSignup ? "Log in" : "Create one"}
         </button>
       </p>
+      </div>
     </div>
   );
 }
