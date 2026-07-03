@@ -91,7 +91,7 @@ export default function ComfortMap() {
         </p>
       </div>
 
-      <ComfortWheel segments={segments} onSelect={handleSelect} />
+      <ComfortWheel segments={segments} onSelect={handleSelect} activeKey={activeCat} />
 
       <p className="tiny faint center" style={{ marginTop: 12, marginBottom: 4 }}>
         Tap a lit segment to explore &middot; three ready now, three coming soon
