@@ -27,6 +27,16 @@ export const PHILOSOPHY_LINES = [
   "There is no \u201cright\u201d pace.",
 ];
 
+// Reflection Journal prompts (v1.1 §10). A "Free write" option is added in the UI.
+export const JOURNAL_PROMPTS = [
+  "What did you learn about yourself today?",
+  "Did anything surprise you?",
+  "What felt safe?",
+  "What felt uncomfortable?",
+  "What are you proud of?",
+  "What would you like to remember?",
+];
+
 // Deterministic daily pick: a woven line stays stable across a day and across
 // re-renders, but gently rotates from one day to the next.
 export function dailyPick(arr) {
