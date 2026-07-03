@@ -21,7 +21,7 @@ export default function Auth() {
     try {
       if (isSignup) {
         await signup(email.trim(), password, name.trim());
-        nav("/onboarding");
+        nav("/why");
       } else {
         await login(email.trim(), password);
         nav("/app");
