@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 
 import Landing from "./screens/Landing";
+import WhyTethra from "./screens/WhyTethra";
 import Auth from "./screens/Auth";
 import Onboarding from "./screens/Onboarding";
 import Blueprint from "./screens/Blueprint";
@@ -22,6 +23,7 @@ export default function App() {
         <div className="app-shell">
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/why" element={<WhyTethra />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/safety" element={<Safety />} />
 
