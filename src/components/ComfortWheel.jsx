@@ -1,9 +1,12 @@
 import Icon from "./Icon";
 
 // A radial "comfort wheel": colored segments fan around a plum "you are at center"
-// hub. Active segments are tappable; "soon" segments are shown faded (coming soon).
+// hub. Every section is traced with a thin outline; the active section is lit with a
+// deeper wash + bold plum outline. Active segments are tappable; "soon" segments are
+// shown faded (coming soon).
 // segments: [{ key, label, icon, color, state: "active"|"soon", progress }]
-export default function ComfortWheel({ segments, onSelect }) {
+// activeKey: the key of the currently selected segment (or null).
+export default function ComfortWheel({ segments, onSelect, activeKey }) {
   const S = 300;                 // logical viewBox size
   const cx = S / 2, cy = S / 2;
   const R = S / 2 - 4;           // outer radius
@@ -25,11 +28,30 @@ export default function ComfortWheel({ segments, onSelect }) {
   return (
     <div style={{ position: "relative", width: "100%", maxWidth: 340, margin: "0 auto", aspectRatio: "1 / 1" }}>
       <svg viewBox={`0 0 ${S} ${S}`} width="100%" height="100%" style={{ display: "block" }} aria-hidden="true">
-        {segments.map((s, i) => (
-          <path key={s.key} d={wedge(i)} fill={s.color}
-            fillOpacity={s.state === "soon" ? 0.45 : 1}
-            stroke="var(--cream, #F4EEE6)" strokeWidth="3" />
-        ))}
+        {/* Base sections, each traced with a thin plum outline */}
+        {segments.map((s, i) => {
+          const soon = s.state === "soon";
+          return (
+            <path key={s.key} d={wedge(i)} fill={s.color}
+              fillOpacity={soon ? 0.4 : 1}
+              stroke="var(--tethra-plum, #4B2E59)"
+              strokeOpacity={soon ? 0.1 : 0.22}
+              strokeWidth="1.25"
+              strokeLinejoin="round" />
+          );
+        })}
+
+        {/* Selected section drawn on top: deeper wash + bold traced outline */}
+        {segments.map((s, i) =>
+          s.key === activeKey && s.state !== "soon" ? (
+            <g key={`active-${s.key}`}>
+              <path d={wedge(i)} fill="var(--tethra-plum, #4B2E59)" fillOpacity="0.13" />
+              <path d={wedge(i)} fill="none" stroke="var(--tethra-plum, #4B2E59)"
+                strokeWidth="2.75" strokeLinejoin="round" />
+            </g>
+          ) : null
+        )}
+
         <circle cx={cx} cy={cy} r={rHub + 4} fill="var(--cream, #F4EEE6)" />
         <circle cx={cx} cy={cy} r={rHub} fill="var(--tethra-plum, #4B2E59)" />
         <text x={cx} y={cy - 4} textAnchor="middle" fontSize="14" fontWeight="600" fill="#ffffff">You are</text>
@@ -40,11 +62,13 @@ export default function ComfortWheel({ segments, onSelect }) {
       {segments.map((s, i) => {
         const [bx, by] = toXY(i * seg, R * 0.66);
         const active = s.state !== "soon";
+        const selected = active && s.key === activeKey;
         return (
           <button
             key={s.key}
             type="button"
             disabled={!active}
+            aria-pressed={selected}
             onClick={() => active && onSelect(s)}
             aria-label={active ? `${s.label}, ${s.progress || "open"}` : `${s.label}, coming soon`}
             style={{
@@ -56,12 +80,19 @@ export default function ComfortWheel({ segments, onSelect }) {
               display: "flex", flexDirection: "column", alignItems: "center", gap: 2, textAlign: "center",
             }}
           >
-            <Icon name={s.icon} size={30} bare
+            <Icon name={s.icon} size={selected ? 33 : 30} bare
               style={active ? undefined : { opacity: 0.45, filter: "grayscale(1)" }} />
-            <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.15, color: active ? "var(--tethra-plum, #4B2E59)" : "#a29ba6" }}>
+            <span style={{
+              fontSize: 11, fontWeight: selected ? 700 : 600, lineHeight: 1.15,
+              color: active ? "var(--tethra-plum, #4B2E59)" : "#a29ba6",
+            }}>
               {s.label}
             </span>
-            <span style={{ fontSize: 8, letterSpacing: "0.04em", fontWeight: active ? 400 : 700, color: active ? "var(--tethra-gray, #7D7B87)" : "#b79878" }}>
+            <span style={{
+              fontSize: 8, letterSpacing: "0.04em",
+              fontWeight: active ? (selected ? 700 : 400) : 700,
+              color: active ? "var(--tethra-gray, #7D7B87)" : "#b79878",
+            }}>
               {active ? (s.progress || "") : "COMING SOON"}
             </span>
           </button>
