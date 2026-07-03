@@ -80,6 +80,82 @@ export const BLUEPRINT = [
   },
 ];
 
+// Turn saved Blueprint answers into an encouraging, shareable narrative (v1.1 §6).
+// Deterministic, offline, and tone-controlled — never a raw readout of chips.
+// Returns { lines: string[], closing: string[] } or null if nothing is answered.
+const BP_NEED_PHRASES = {
+  "Time": "time to let things unfold",
+  "Consistency": "consistency you can count on",
+  "Clear communication": "clear, honest communication",
+  "Emotional safety": "a sense of emotional safety",
+  "Physical space": "room for your own space",
+  "Reassurance": "gentle reassurance along the way",
+  "Patience": "patience rather than pressure",
+  "Directness": "directness over guessing",
+  "Friendship first": "friendship as the foundation",
+};
+const BP_PACE_LINES = {
+  "Very slow": "You move very slowly, letting trust \u2014 not urgency \u2014 set the pace.",
+  "Slow": "You prefer a slow, steady pace where nothing feels rushed.",
+  "Moderate": "You keep a balanced pace, neither rushing nor holding back.",
+  "Flexible": "Your pace is flexible, shaped by how safe a connection feels.",
+  "Fast when I feel safe": "Once you feel genuinely safe you can grow close with ease \u2014 and you take your time until then.",
+  "I am still learning": "You\u2019re still discovering your own pace, and you\u2019re giving yourself room to learn it.",
+};
+const BP_SAFE_PHRASES = {
+  "Asks before assuming": "asks before assuming",
+  "Checks in with me": "checks in with you",
+  "Respects \u201cnot yet\u201d": "respects a \u201cnot yet\u201d",
+  "Does not rush physical affection": "doesn\u2019t rush physical affection",
+  "Communicates clearly": "communicates clearly",
+  "Follows through": "follows through on what they say",
+  "Gives me space to process": "gives you space to process",
+  "Does not pressure me": "never pressures you",
+};
+
+function bpJoin(arr) {
+  const a = arr.filter(Boolean);
+  if (a.length === 0) return "";
+  if (a.length === 1) return a[0];
+  if (a.length === 2) return `${a[0]} and ${a[1]}`;
+  return `${a.slice(0, -1).join(", ")}, and ${a[a.length - 1]}`;
+}
+
+export function blueprintNarrative(answers) {
+  if (!answers) return null;
+  const needs = Array.isArray(answers.needs) ? answers.needs : [];
+  const pace = answers.pace || "";
+  const safest = Array.isArray(answers.safest) ? answers.safest : [];
+  if (!needs.length && !pace && !safest.length) return null;
+
+  const lines = [];
+
+  if (needs.length) {
+    const frags = needs.map((n) => BP_NEED_PHRASES[n]).filter(Boolean);
+    if (frags.length) lines.push(`When you\u2019re getting to know someone, you tend to look for ${bpJoin(frags)}.`);
+  }
+  if (pace && BP_PACE_LINES[pace]) lines.push(BP_PACE_LINES[pace]);
+  if (safest.length) {
+    const frags = safest.map((s) => BP_SAFE_PHRASES[s]).filter(Boolean);
+    if (frags.length) lines.push(`You feel safest when someone ${bpJoin(frags)}.`);
+  }
+
+  // Gentle interpretive touches so it reads as insight, not a checklist.
+  if (needs.includes("Consistency")) lines.push("You value consistency over intensity.");
+  if (needs.includes("Clear communication") || needs.includes("Directness") || safest.includes("Communicates clearly"))
+    lines.push("You appreciate clarity over guessing.");
+  if ((pace === "Slow" || pace === "Very slow") &&
+      (safest.includes("Does not rush physical affection") || needs.includes("Friendship first")))
+    lines.push("You tend to build trust through conversation before physical affection.");
+  if (safest.includes("Respects \u201cnot yet\u201d") || safest.includes("Does not pressure me"))
+    lines.push("You honor your own \u201cnot yet,\u201d and you deserve someone who honors it too.");
+
+  return {
+    lines,
+    closing: ["Your boundaries aren\u2019t walls.", "They\u2019re the foundation of meaningful connection."],
+  };
+}
+
 // Comfort spectrum. `UNSURE` is a separate state, never a point on the line.
 export const COMFORT_LEVELS = [
   "Not comfortable",
