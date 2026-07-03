@@ -42,6 +42,7 @@ export default function Dashboard() {
     { to: "/app/intimacy", icon: "intimacy", title: "Physical intimacy comfort", sub: "Private by default \u00b7 at your pace" },
     { to: "/app/shared", icon: "shared-space", title: "Shared space", sub: "Understand each other, gently" },
     { to: "/app/check-in", icon: "check-in", title: "Consent check-in", sub: "Before or after time together" },
+    { to: "/app/journal", icon: "journal", title: "Reflection journal", sub: "A private space to notice yourself" },
     { to: "/blueprint", icon: "blueprint", title: "Your blueprint", sub: "How you enter connection" },
     { to: "/safety", icon: "safety-resources", title: "Safety & resources", sub: "Support, anytime" },
   ];
