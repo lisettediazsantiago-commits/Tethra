@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { COMFORT_CATEGORIES, opener } from "../data/content";
+import { COMFORT_CATEGORIES, opener, PHILOSOPHY_LINES, dailyPick } from "../data/content";
 import Spectrum from "../components/Spectrum";
 import { IconLock, IconHeart, IconEye } from "../components/Icons";
 import ComfortWheel from "../components/ComfortWheel";
@@ -178,6 +178,10 @@ export default function ComfortMap() {
           </>
         )}
       </div>
+
+      <p className="tiny faint center" style={{ marginTop: 22, fontStyle: "italic", lineHeight: 1.5 }}>
+        {dailyPick(PHILOSOPHY_LINES)}
+      </p>
     </div>
   );
 }

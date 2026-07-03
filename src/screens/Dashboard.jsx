@@ -3,39 +3,39 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { COMFORT_CATEGORIES } from "../data/content";
+import { TETHRA_QUOTES, dailyPick } from "../data/content";
 import Icon from "../components/Icon";
 
-// Progress is measured against the CURRENT taxonomy only. Keys are `${cat}:${item}`.
-// Answers to retired items (e.g. the old physical-touch category, now moved to the
-// dedicated Intimacy section) may still sit in a user's saved document — those must
-// not count, or the percentage can climb past 100%.
-const TOTAL = COMFORT_CATEGORIES.reduce((n, c) => n + c.items.length, 0);
-const VALID_KEYS = new Set(
-  COMFORT_CATEGORIES.flatMap((c) => c.items.map((it) => `${c.key}:${it}`))
-);
+const MONTHS = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"];
+
+// Reflection language instead of a completion metric — the Comfort Map is a
+// living reflection, never a score (v1.1 philosophy: no one is ever "complete").
+function reflectionStatus(d) {
+  if (!d) return "Not reflected yet";
+  const now = new Date();
+  const day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate());
+  const diff = Math.round((day(now) - day(d)) / 86400000);
+  if (diff <= 0) return "Reflected today";
+  if (diff === 1) return "Reflected yesterday";
+  if (d.getFullYear() === now.getFullYear()) return `Last reflected: ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  return `Last reflected: ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
   const nav = useNavigate();
-  const [mapped, setMapped] = useState(0);
+  const [reflectedAt, setReflectedAt] = useState(null);
 
   useEffect(() => {
     if (!user) return;
     getDoc(doc(db, "comfortMaps", user.uid)).then((snap) => {
-      if (snap.exists()) {
-        const items = snap.data().items || {};
-        const count = Object.entries(items).filter(
-          ([k, e]) => VALID_KEYS.has(k) && e && e.level
-        ).length;
-        setMapped(count);
-      }
+      if (snap.exists()) setReflectedAt(snap.data().updatedAt?.toDate?.() || null);
     });
   }, [user]);
 
-  // Clamp as a final safety net so the bar can never render wider than full.
-  const pct = TOTAL ? Math.min(100, Math.round((mapped / TOTAL) * 100)) : 0;
   const name = user?.displayName?.split(" ")[0] || "there";
+  const quote = dailyPick(TETHRA_QUOTES);
 
   const links = [
     { to: "/app/comfort-map", icon: "comfort-map", title: "Comfort map", sub: "Mark where you are today" },
@@ -56,14 +56,11 @@ export default function Dashboard() {
       <div className="card">
         <div className="row-between">
           <span className="small" style={{ fontWeight: 500 }}>Your comfort map</span>
-          <span className="tiny faint">{pct}% mapped</span>
+          <span className="tiny faint">{reflectionStatus(reflectedAt)}</span>
         </div>
-        <div className="progress" style={{ marginTop: 10 }}>
-          <span style={{ width: `${pct}%` }} />
-        </div>
-        <p className="tiny muted" style={{ marginTop: 10 }}>
-          Growth here isn&rsquo;t &ldquo;progress toward intimacy.&rdquo; It can mean becoming clearer,
-          more open, or more protective of a boundary.
+        <p className="tiny muted" style={{ marginTop: 10, lineHeight: 1.55 }}>
+          Your map reflects who you are today &mdash; not who you have to be forever. Revisit it whenever
+          you grow, heal, or discover something new.
         </p>
       </div>
 
@@ -80,6 +77,12 @@ export default function Dashboard() {
           </button>
         ))}
       </div>
+
+      {quote && (
+        <p className="tiny faint center" style={{ marginTop: 22, fontStyle: "italic", lineHeight: 1.5 }}>
+          &ldquo;{quote}&rdquo;
+        </p>
+      )}
     </div>
   );
 }
