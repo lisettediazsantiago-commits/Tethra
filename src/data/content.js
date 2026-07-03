@@ -7,6 +7,35 @@ export const TAGLINES = [
   "Know your pace. Share your truth. Grow with care.",
 ];
 
+// Signature quotes — woven gently through the app (v1.1 §12).
+export const TETHRA_QUOTES = [
+  "Move at the pace of trust.",
+  "Your map isn\u2019t meant to define you. It\u2019s meant to help you understand who you are today.",
+  "Growth isn\u2019t becoming someone else. Sometimes it\u2019s simply recognizing yourself more clearly.",
+  "There is no perfect timeline for connection.",
+  "Understanding yourself is the first act of understanding someone else.",
+];
+
+// Core philosophy principles threaded through the experience (v1.1 §11).
+export const PHILOSOPHY_LINES = [
+  "You are allowed to change.",
+  "Boundaries can become stronger or softer.",
+  "Healing isn\u2019t linear.",
+  "Growth isn\u2019t measured by intimacy.",
+  "Consent is an ongoing conversation.",
+  "Self-awareness is lifelong.",
+  "There is no \u201cright\u201d pace.",
+];
+
+// Deterministic daily pick: a woven line stays stable across a day and across
+// re-renders, but gently rotates from one day to the next.
+export function dailyPick(arr) {
+  if (!arr || !arr.length) return "";
+  const now = new Date();
+  const dayNum = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86400000);
+  return arr[dayNum % arr.length];
+}
+
 // Onboarding — reasons someone is here. These guide reflection only.
 // They are never used to label a person permanently.
 export const ONBOARDING = [
