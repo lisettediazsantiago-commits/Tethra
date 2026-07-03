@@ -7,6 +7,7 @@ import { COMFORT_CATEGORIES, opener } from "../data/content";
 import Spectrum from "../components/Spectrum";
 import { IconLock, IconHeart, IconEye } from "../components/Icons";
 import ComfortWheel from "../components/ComfortWheel";
+import IntimacyPanel from "../components/IntimacyPanel";
 
 const keyOf = (cat, item) => `${cat}:${item}`;
 
@@ -66,7 +67,7 @@ export default function ComfortMap() {
       key: c.key, label: c.title.split(" ")[0], icon: SEG_ICON[c.key],
       color: SEG_COLOR[c.key], state: "active", progress: progressFor(c),
     })),
-    { key: "intimacy", label: "Intimacy", icon: SEG_ICON.intimacy, color: SEG_COLOR.intimacy, state: "active", progress: "open", to: "/app/intimacy" },
+    { key: "intimacy", label: "Intimacy", icon: SEG_ICON.intimacy, color: SEG_COLOR.intimacy, state: "active", progress: "open" },
     { key: "boundaries", label: "Boundaries", icon: SEG_ICON.boundaries, color: SEG_COLOR.boundaries, state: "soon" },
     { key: "pace", label: "Trust pace", icon: SEG_ICON.pace, color: SEG_COLOR.pace, state: "soon" },
   ];
@@ -97,7 +98,15 @@ export default function ComfortMap() {
       </p>
 
       <div ref={itemsRef} style={{ scrollMarginTop: 16 }}>
-        {!category ? (
+        {activeCat === "intimacy" ? (
+          <>
+            <div className="row-between" style={{ margin: "18px 0 10px" }}>
+              <span className="eyebrow">Physical Intimacy Comfort</span>
+              <span className="tiny faint">private by default</span>
+            </div>
+            <IntimacyPanel />
+          </>
+        ) : !category ? (
           <p className="small muted center" style={{ marginTop: 18 }}>
             Choose an area above to begin mapping where you are today.
           </p>
