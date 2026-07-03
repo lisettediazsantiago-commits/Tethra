@@ -234,10 +234,11 @@ button { font-family: var(--body); }
   transition: background 0.18s ease;
 }
 .nav a.active { color: var(--tethra-purple); font-weight: 600; }
-.nav a.active::after {
+.nav a::after {
   content: ""; width: 5px; height: 5px; border-radius: 50%;
-  background: var(--tethra-purple); margin-top: 1px;
+  background: transparent; margin-top: 2px;
 }
+.nav a.active::after { background: var(--tethra-purple); }
 .nav a:focus-visible { outline: none; }
 .nav a:focus-visible .navicon { outline: 3px solid var(--plum-400); outline-offset: 2px; }
 
