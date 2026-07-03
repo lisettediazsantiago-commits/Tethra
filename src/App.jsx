@@ -10,6 +10,7 @@ import Onboarding from "./screens/Onboarding";
 import Blueprint from "./screens/Blueprint";
 import Dashboard from "./screens/Dashboard";
 import ComfortMap from "./screens/ComfortMap";
+import Journal from "./screens/Journal";
 import Intimacy from "./screens/Intimacy";
 import SharedSpace from "./screens/SharedSpace";
 import CheckIn from "./screens/CheckIn";
@@ -36,6 +37,7 @@ export default function App() {
               <Route path="intimacy" element={<Intimacy />} />
               <Route path="shared" element={<SharedSpace />} />
               <Route path="check-in" element={<CheckIn />} />
+              <Route path="journal" element={<Journal />} />
               <Route path="settings" element={<Settings />} />
             </Route>
 
