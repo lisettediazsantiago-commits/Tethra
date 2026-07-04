@@ -23,7 +23,7 @@ const CUSTOM_TINT = {
   respect: "#E5EBE0", "trust-timeline": "#E5EBE0", growth: "#E5EBE0",
   "comfort-map": "#E5EBE0", progress: "#E5EBE0",
   clarity: "#FAEED8", understanding: "#FAEED8",
-  write: "#F1F0F5",
+  write: "#F1F0F5", journal: "#F1F0F5",
   // batch 3 — the remaining visible icons
   intimacy: "#FBE8EB", affection: "#FBE8EB",
   home: "#F1E7F6", "shared-space": "#F1E7F6",
