@@ -13,6 +13,7 @@ import ComfortMap from "./screens/ComfortMap";
 import Journal from "./screens/Journal";
 import Snapshot from "./screens/Snapshot";
 import Timeline from "./screens/Timeline";
+import Reflect from "./screens/Reflect";
 import Intimacy from "./screens/Intimacy";
 import SharedSpace from "./screens/SharedSpace";
 import CheckIn from "./screens/CheckIn";
@@ -42,6 +43,7 @@ export default function App() {
               <Route path="journal" element={<Journal />} />
               <Route path="snapshot" element={<Snapshot />} />
               <Route path="timeline" element={<Timeline />} />
+              <Route path="reflect" element={<Reflect />} />
               <Route path="settings" element={<Settings />} />
             </Route>
 
