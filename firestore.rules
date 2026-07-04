@@ -49,11 +49,33 @@ service cloud.firestore {
     }
 
     // Two-party shared spaces
-    match /sharedSpaces/{spaceId} {
-      allow create: if signedIn() && request.resource.data.createdBy == request.auth.uid;
-      allow read, update: if signedIn() &&
-        (resource.data.createdBy == request.auth.uid ||
-         resource.data.invitedUserId == request.auth.uid);
+    // Two-party shared spaces. The document id IS the invite code, so knowing the
+    // code is what grants the ability to read a still-open space and join it once.
+    // Raw comfort/intimacy maps are never shared here — only the snapshot each
+    // person copies in (their own chosen fields).
+    match /sharedSpaces/{code} {
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.invitedUserId == null;
+
+      allow read: if signedIn() && (
+        resource.data.createdBy == request.auth.uid
+        || resource.data.invitedUserId == request.auth.uid
+        || (resource.data.status == "pending" && resource.data.invitedUserId == null)
+      );
+
+      allow update: if signedIn() && (
+        resource.data.createdBy == request.auth.uid
+        || resource.data.invitedUserId == request.auth.uid
+        || (
+          resource.data.status == "pending"
+          && resource.data.invitedUserId == null
+          && request.resource.data.invitedUserId == request.auth.uid
+          && request.resource.data.createdBy == resource.data.createdBy
+        )
+      );
+
+      allow delete: if signedIn() && resource.data.createdBy == request.auth.uid;
     }
   }
 }
