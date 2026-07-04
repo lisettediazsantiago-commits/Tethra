@@ -37,6 +37,15 @@ export const JOURNAL_PROMPTS = [
   "What would you like to remember?",
 ];
 
+// Growth Timeline inspiration prompts (v1.1 §9). One rotates in as a gentle nudge.
+export const GROWTH_PROMPTS = [
+  "What are you more comfortable with now than you used to be?",
+  "A boundary that\u2019s grown stronger or softer lately\u2026",
+  "Something you understand about yourself now that you didn\u2019t before\u2026",
+  "A fear that feels smaller than it once did\u2026",
+  "How has your sense of your own pace changed?",
+];
+
 // Deterministic daily pick: a woven line stays stable across a day and across
 // re-renders, but gently rotates from one day to the next.
 export function dailyPick(arr) {
