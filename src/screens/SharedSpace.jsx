@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { compareLevels, INTIMACY_CATEGORIES } from "../data/content";
+import { compareLevels, COMFORT_LEVELS, UNSURE } from "../data/content";
 import { IconShield } from "../components/Icons";
 import Icon from "../components/Icon";
 import BackBar from "../components/BackBar";
@@ -15,16 +15,43 @@ const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const makeCode = () => Array.from({ length: 7 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
 const keyOf = (x) => `${x.cat}:${x.item}`;
 const splitKey = (k) => { const i = k.indexOf(":"); return [k.slice(0, i), k.slice(i + 1)]; };
-const catTitle = (cats, key) => (cats.find((c) => c.key === key)?.title || "");
 
-// State colour key (shown as a legend up top).
-const STATE = {
-  shared:  { color: "#8FA87E", label: "Aligned" },
-  talk:    { color: "#D6A55E", label: "Talk", tint: "#FBF2E4", ink: "#8a6a3a", prompt: "Try: \u201cWhat would make this feel easy and welcome for you?\u201d" },
-  slow:    { color: "#D6A0B3", label: "Go slowly", tint: "#FBECF0", ink: "#9c5f77", prompt: "Go gently \u2014 there\u2019s a real difference here. No rush at all." },
-  waiting: { color: "#A98BC0", label: "Waiting on you" },
-};
-const ORDER = { shared: 0, talk: 1, slow: 2, waiting: 3 };
+// A gentle, faithful one-line form of a level/state for collapsed hints.
+const short = (lvl) => (lvl ? lvl.charAt(0).toLowerCase() + lvl.slice(1) : "\u2014");
+
+// Which of two comfort levels is more cautious (lower on the spectrum; "unsure"
+// counts as most exploratory). Returns "a" | "b" | "equal".
+function moreCautious(a, b) {
+  const ia = a === UNSURE ? -1 : COMFORT_LEVELS.indexOf(a);
+  const ib = b === UNSURE ? -1 : COMFORT_LEVELS.indexOf(b);
+  if (ia === ib) return "equal";
+  return ia < ib ? "a" : "b";
+}
+
+// Level-driven, generic "how each of you approaches this" lines. Never scripts the
+// other person — just names a gentle style based on who's more cautious. Returns
+// [{line, sub, kind}] cautious-first, or null if we can't tell (missing/equal).
+function approachLines(mine, theirs, partnerName) {
+  if (!mine || !theirs) return null;
+  const who = moreCautious(mine, theirs);
+  if (who === "equal") return null;
+  const cautious = who === "a" ? "You" : partnerName;
+  const ready = who === "a" ? partnerName : "You";
+  const youCautious = cautious === "You";
+  const youReady = ready === "You";
+  return [
+    {
+      kind: "ease",
+      line: youCautious ? "You like to ease into this." : `${cautious} likes to ease into this.`,
+      sub: youCautious ? "A little more time helps you feel ready." : `A little more time helps ${cautious} feel ready.`,
+    },
+    {
+      kind: "ready",
+      line: youReady ? "You feel more ready here." : `${ready} feels more ready here.`,
+      sub: youReady ? "You\u2019re open to leaning in a little." : `${ready} is open to leaning in a little.`,
+    },
+  ];
+}
 
 async function buildSnapshot(uid, name) {
   const [c, i] = await Promise.all([
@@ -40,6 +67,28 @@ async function buildSnapshot(uid, name) {
   return { name: name || "Your partner", comfort, intimacy, sharedAt: Date.now() };
 }
 
+// Tiny inline icons (stroke, inherit color + size).
+const SP = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" };
+const box = (s) => ({ width: s, height: s, viewBox: "0 0 24 24" });
+const Check = ({ s = 16 }) => <svg {...box(s)} {...SP}><path d="M4 12.5l5 5 11-11" /></svg>;
+const Sprout = ({ s = 15 }) => <svg {...box(s)} {...SP}><path d="M12 20v-7" /><path d="M12 13c0-3 2.2-5 6-5 0 3-2.2 5-6 5z" /><path d="M12 13c0-3-2.2-5-6-5 0 3 2.2 5 6 5z" /></svg>;
+const Feather = ({ s = 16 }) => <svg {...box(s)} {...SP}><path d="M4 20l9-9" /><path d="M13 3a6 6 0 016 6c0 4.5-4 8-9 8H6l-2 2v-4c0-5 4.5-12 9-12z" /></svg>;
+const Msg = ({ s = 15 }) => <svg {...box(s)} {...SP}><path d="M21 11.5a8 8 0 01-11.5 7.2L4 20l1.3-5A8 8 0 1121 11.5z" /></svg>;
+const LockOpen = ({ s = 15 }) => <svg {...box(s)} {...SP}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V7a4 4 0 017.9-.9" /></svg>;
+const Heart = ({ s = 13, filled }) => <svg {...box(s)} {...SP} fill={filled ? "currentColor" : "none"}><path d="M12 20S4 15 4 9a4 4 0 018-1 4 4 0 018 1c0 6-8 11-8 11z" /></svg>;
+const HandsHeart = ({ s = 18 }) => <svg {...box(s)} {...SP}><path d="M12 10s-3-2.2-3-4.2A2 2 0 0112 4a2 2 0 013 1.8C15 7.8 12 10 12 10z" /><path d="M4 13l4 4 4-1 4 1 4-4" /><path d="M2 12l3 3M22 12l-3 3" /></svg>;
+const Bulb = ({ s = 15 }) => <svg {...box(s)} {...SP}><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 00-3.5 10.9c.6.5.9 1.2.9 1.9v.2h5.2v-.2c0-.7.3-1.4.9-1.9A6 6 0 0012 3z" /></svg>;
+const Hourglass = ({ s = 17 }) => <svg {...box(s)} {...SP}><path d="M6 3h12M6 21h12" /><path d="M8 3c0 4 8 5 8 9s-8 5-8 9M16 3c0 4-8 5-8 9s8 5 8 9" /></svg>;
+const Chevron = ({ open }) => <svg {...box(16)} {...SP} style={{ color: "#C6BACD", transition: "transform .18s ease", transform: open ? "rotate(90deg)" : "none", flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>;
+
+// The four gentle buckets, in reading order.
+const GROUPS = [
+  { state: "shared",  label: "Growing together",     dot: "#8FA87E", tint: "#EDF2E4", iconInk: "#6E8158", labelInk: "#7C8A6C", icon: (p) => <Check {...p} />,    accent: null },
+  { state: "talk",    label: "Worth a conversation", dot: "#7FA05A", tint: "#EDF3E2", iconInk: "#5E7B39", labelInk: "#6E8355", icon: (p) => <Sprout {...p} />,   accent: "#8CB064" },
+  { state: "slow",    label: "Ease into gently",     dot: "#D6A0B3", tint: "#FBECF0", iconInk: "#B06C85", labelInk: "#B07E90", icon: (p) => <Feather {...p} />,  accent: "#D6A0B3" },
+  { state: "waiting", label: "Waiting on you",       dot: "#A98BC0", tint: "#EFE8F5", iconInk: "#8E73A8", labelInk: "#9781AB", icon: (p) => <LockOpen {...p} />, accent: null },
+];
+
 export default function SharedSpace() {
   const { user } = useAuth();
   const nav = useNavigate();
@@ -49,6 +98,8 @@ export default function SharedSpace() {
   const [codeInput, setCodeInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [openKey, setOpenKey] = useState(null);
+  const [saved, setSaved] = useState([]);
 
   const firstName = (user?.displayName || "").split(" ")[0] || "You";
 
@@ -57,6 +108,7 @@ export default function SharedSpace() {
     (async () => {
       try {
         const u = await getDoc(doc(db, "users", user.uid));
+        setSaved(u.exists() ? (u.data().savedConversations || []) : []);
         const id = u.exists() ? (u.data().sharedSpaceId || null) : null;
         setSpaceId(id);
         if (id) {
@@ -65,8 +117,6 @@ export default function SharedSpace() {
             let s = snap.data();
             const amMember = s.createdBy === user.uid || s.invitedUserId === user.uid;
             if (amMember) {
-              // Keep my shared snapshot current, so items switched on since I
-              // connected show up automatically (no manual refresh needed).
               const name = (user.displayName || "").split(" ")[0] || "You";
               const mine = await buildSnapshot(user.uid, name);
               try {
@@ -145,6 +195,14 @@ export default function SharedSpace() {
     finally { setBusy(false); }
   }
 
+  function toggleSaved(k) {
+    setSaved((cur) => {
+      const next = cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k];
+      if (user) setDoc(doc(db, "users", user.uid), { savedConversations: next }, { merge: true }).catch(() => {});
+      return next;
+    });
+  }
+
   const inputStyle = {
     width: "100%", marginTop: 10, height: 40, boxSizing: "border-box",
     border: "0.5px solid var(--line)", borderRadius: 12, padding: "0 12px",
@@ -155,7 +213,7 @@ export default function SharedSpace() {
   const connected = space && space.status === "active" && space.invitedUserId;
   const pending = space && space.status === "pending" && space.createdBy === user?.uid && !space.invitedUserId;
 
-  let comfortRows = [], intimacyRows = [], partnerName = "Your partner", iShareNothing = false;
+  let rows = [], partnerName = "Your partner", iShareNothing = false;
   if (connected && user) {
     const partnerUid = space.createdBy === user.uid ? space.invitedUserId : space.createdBy;
     const me = space.members?.[user.uid] || { comfort: [], intimacy: [] };
@@ -164,49 +222,138 @@ export default function SharedSpace() {
     iShareNothing = (me.comfort || []).length === 0 && (me.intimacy || []).length === 0;
 
     const cKeys = new Set([...(me.comfort || []).map(keyOf), ...(them.comfort || []).map(keyOf)]);
-    comfortRows = [...cKeys].map((k) => {
+    const comfortRows = [...cKeys].map((k) => {
       const [cat, item] = splitKey(k);
       const mine = (me.comfort || []).find((x) => keyOf(x) === k);
       const theirs = (them.comfort || []).find((x) => keyOf(x) === k);
-      let state, note;
-      if (mine && theirs) { state = compareLevels(mine.level, theirs.level).state; note = `You: ${mine.level || "\u2014"} \u00b7 ${partnerName}: ${theirs.level || "\u2014"}`; }
-      else if (theirs) { state = "waiting"; note = `${partnerName} shared this \u2014 you haven\u2019t yet`; }
-      else { state = "waiting"; note = `You shared this \u2014 waiting on ${partnerName}`; }
-      return { item, cat, state, note };
-    }).sort((a, b) => ORDER[a.state] - ORDER[b.state] || a.item.localeCompare(b.item));
+      if (mine && theirs) {
+        return { domain: "comfort", item, cat, state: compareLevels(mine.level, theirs.level).state, you: mine.level || "", them: theirs.level || "" };
+      }
+      const note = theirs ? `${partnerName} shared this \u2014 switch yours on to compare.` : `You shared this \u2014 waiting on ${partnerName}.`;
+      return { domain: "comfort", item, cat, state: "waiting", note };
+    });
 
     const iBoth = (me.intimacy || []).filter((x) => (them.intimacy || []).some((y) => keyOf(y) === keyOf(x)));
-    intimacyRows = iBoth.map((x) => {
+    const intimacyRows = iBoth.map((x) => {
       const theirs = (them.intimacy || []).find((y) => keyOf(y) === keyOf(x));
-      const state = x.state && theirs.state && x.state === theirs.state ? "shared" : "talk";
-      return { item: x.item, cat: x.cat, state, note: `You: ${x.state || "\u2014"} \u00b7 ${partnerName}: ${theirs.state || "\u2014"}` };
+      const same = x.state && theirs.state && x.state === theirs.state;
+      return { domain: "intimacy", item: x.item, cat: x.cat, state: same ? "shared" : "talk", you: x.state || "", them: theirs.state || "" };
     });
+
+    rows = [...comfortRows, ...intimacyRows].sort((a, b) => a.item.localeCompare(b.item));
   }
 
-  const RailCard = ({ r }) => {
-    const st = STATE[r.state] || STATE.waiting;
-    return (
-      <div className="card" style={{ marginBottom: 8, borderLeft: `4px solid ${st.color}` }}>
-        <span className="small" style={{ fontWeight: 500 }}>{r.item}</span>
-        <p className="tiny muted" style={{ marginTop: 4 }}>{r.note}</p>
-        {st.prompt && (
-          <p style={{ fontSize: 11.5, color: st.ink, background: st.tint, borderRadius: 8, padding: "8px 10px", marginTop: 8, lineHeight: 1.45 }}>
-            {st.prompt}
+  const counts = GROUPS.reduce((m, g) => (m[g.state] = rows.filter((r) => r.state === g.state).length, m), {});
+  const nothingToCompare = connected && rows.length === 0;
+
+  const collapsedHint = (r) => {
+    if (r.state === "waiting") return r.note;
+    if (r.state === "shared") return `You and ${partnerName} both feel easy here.`;
+    return `You: ${short(r.you)} \u00b7 ${partnerName}: ${short(r.them)}`;
+  };
+
+  const Callout = ({ talk, children, sub, ink, tint, icon }) => (
+    <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: tint, borderRadius: 11, padding: "11px 12px" }}>
+      <span style={{ flex: "none", marginTop: 1, color: ink }}>{icon}</span>
+      <span style={{ flex: 1 }}>
+        <span style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: ink, lineHeight: 1.4 }}>{children}</span>
+        <span style={{ display: "block", fontSize: 11, color: talk ? "#7E6E8C" : "#A67388", marginTop: 2, lineHeight: 1.4 }}>{sub}</span>
+      </span>
+    </div>
+  );
+
+  const Panel = ({ r, g, k }) => {
+    if (g.state === "shared") {
+      return (
+        <div style={{ padding: "0 14px 13px 57px" }}>
+          <p style={{ fontSize: 12, color: "#8A7C93", lineHeight: 1.5, margin: 0 }}>
+            You and {partnerName} both feel easy here &mdash; nothing to work out. Let yourself enjoy it.
           </p>
+        </div>
+      );
+    }
+    if (g.state === "waiting") {
+      return (
+        <div style={{ padding: "0 14px 13px 57px" }}>
+          <button className="btn btn-outline" onClick={() => nav("/app/sharing")}>Choose what to share</button>
+        </div>
+      );
+    }
+    const talk = g.state === "talk";
+    const lines = r.domain === "comfort" ? approachLines(r.you, r.them, partnerName) : null;
+    const isSaved = saved.includes(k);
+    return (
+      <div>
+        <div style={{ padding: "0 14px 12px 57px" }}>
+          <p style={{ fontSize: 12, color: "#8A7C93", lineHeight: 1.5, margin: "0 0 11px" }}>
+            {talk ? "Different, not wrong. A chance to understand each other." : "There\u2019s a real difference here \u2014 and that\u2019s completely okay."}
+          </p>
+          <div style={{ display: "flex", alignItems: "stretch", background: talk ? "#F3EDF6" : "#FAEFF3", borderRadius: 11, position: "relative" }}>
+            <div style={{ flex: 1, padding: "10px 12px" }}>
+              <span style={{ display: "inline-block", fontSize: 10.5, fontWeight: 600, color: talk ? "#6C5A7C" : "#9C5F77", background: talk ? "#E7DCF0" : "#F4DBE4", borderRadius: 12, padding: "2px 9px" }}>You</span>
+              <div style={{ fontSize: 12.5, fontWeight: 600, marginTop: 6, color: "#3F2A4C" }}>{short(r.you)}</div>
+            </div>
+            <div style={{ width: 1, background: talk ? "#E2D7EA" : "#F0DBE3" }} />
+            <div style={{ flex: 1, padding: "10px 12px" }}>
+              <span style={{ display: "inline-block", fontSize: 10.5, fontWeight: 600, color: talk ? "#6C5A7C" : "#9C5F77", background: talk ? "#E7DCF0" : "#F4DBE4", borderRadius: 12, padding: "2px 9px" }}>{partnerName}</span>
+              <div style={{ fontSize: 12.5, fontWeight: 600, marginTop: 6, color: "#3F2A4C" }}>{short(r.them)}</div>
+            </div>
+            <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: 26, height: 26, borderRadius: "50%", background: "#FFFFFF", border: `1px solid ${talk ? "#E2D7EA" : "#F0DBE3"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9.5, fontWeight: 600, color: talk ? "#9585A2" : "#C08DA0" }}>vs</span>
+          </div>
+        </div>
+
+        {talk && lines && (
+          <div style={{ background: "#EFF4E7", padding: "12px 14px 12px 57px", display: "flex", flexDirection: "column", gap: 11 }}>
+            {lines.map((ln) => (
+              <div key={ln.kind} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <span style={{ width: 26, height: 26, borderRadius: "50%", background: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center", color: "#5E7B39", flex: "none" }}>
+                  {ln.kind === "ease" ? <Sprout s={14} /> : <Msg s={14} />}
+                </span>
+                <span style={{ flex: 1 }}>
+                  <span style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#3F2A4C" }}>{ln.line}</span>
+                  <span style={{ display: "block", fontSize: 11, color: "#78846A", marginTop: 1, lineHeight: 1.4 }}>{ln.sub}</span>
+                </span>
+              </div>
+            ))}
+          </div>
         )}
+
+        <div style={{ padding: talk ? "12px 14px 0 57px" : "0 14px 0 57px" }}>
+          {talk ? (
+            <Callout talk tint="#F0E9F6" ink="#5A4472" icon={<HandsHeart />} sub="When you understand each other, connection grows.">
+              A conversation here could help you understand each other&rsquo;s pace.
+            </Callout>
+          ) : (
+            <Callout tint="#FBECF0" ink="#8C5570" icon={<Hourglass />} sub="A shared map isn&rsquo;t permission &mdash; consent is still asked for in the moment.">
+              No timeline. Let the more cautious pace lead.
+            </Callout>
+          )}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "12px 14px 14px 57px" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#8A7C93", flex: 1, lineHeight: 1.4 }}>
+            <span style={{ color: talk ? "#C9A24B" : "#CDA0B1", flex: "none" }}>{talk ? <Bulb /> : <Heart s={14} />}</span>
+            {talk ? "Try: start with curiosity. Ask. Listen." : "When you\u2019re both ready. No rush at all."}
+          </span>
+          <button
+            onClick={() => toggleSaved(k)}
+            aria-pressed={isSaved}
+            aria-label={isSaved ? "Saved for later" : "Save for later"}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer",
+              fontSize: 11.5, fontWeight: 600, flex: "none",
+              color: isSaved ? "#FFFFFF" : (talk ? "#7B5E96" : "#9C5F77"),
+              background: isSaved ? (talk ? "#8B6BA6" : "#C07E93") : "transparent",
+              border: `1px solid ${isSaved ? "transparent" : (talk ? "#DFD2EA" : "#F0D8E1")}`,
+              borderRadius: 20, padding: "6px 11px",
+            }}
+          >
+            <Heart s={13} filled={isSaved} /> {isSaved ? "Saved" : "Save"}
+          </button>
+        </div>
       </div>
     );
   };
-
-  const Legend = () => (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 14px", margin: "0 2px 14px", fontSize: 10.5, color: "#9a8fa0" }}>
-      {["shared", "talk", "slow", "waiting"].map((k) => (
-        <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: STATE[k].color }} />{STATE[k].label}
-        </span>
-      ))}
-    </div>
-  );
 
   return (
     <div className="screen">
@@ -214,8 +361,7 @@ export default function SharedSpace() {
       <div className="head">
         <h1 className="display">Shared space</h1>
         <p className="small muted" style={{ marginTop: 6 }}>
-          A place to understand each other. No matches or scores here &mdash; only shared comfort
-          and gentle conversation.
+          Different, not wrong &mdash; just places to understand each other. No matches or scores here.
         </p>
       </div>
 
@@ -256,23 +402,52 @@ export default function SharedSpace() {
             </div>
           )}
 
-          {(comfortRows.length > 0 || intimacyRows.length > 0) && <Legend />}
-
-          {comfortRows.length > 0 && (
-            <>
-              <p className="eyebrow" style={{ marginBottom: 8 }}>Comfort</p>
-              {comfortRows.map((r) => <RailCard key={`c-${r.cat}-${r.item}`} r={r} />)}
-            </>
+          {rows.length > 0 && (
+            <div style={{ display: "flex", gap: 6, margin: "0 2px 4px", flexWrap: "wrap" }}>
+              {counts.shared > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 500, color: "#52603F", background: "#EDF2E4", borderRadius: 20, padding: "5px 10px" }}><Check s={13} />{counts.shared} growing together</span>}
+              {counts.talk > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 500, color: "#4C5F33", background: "#EDF3E2", borderRadius: 20, padding: "5px 10px" }}><Sprout s={13} />{counts.talk} to talk about</span>}
+              {counts.slow > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 500, color: "#9C5F77", background: "#FBECF0", borderRadius: 20, padding: "5px 10px" }}><Feather s={13} />{counts.slow} to ease into</span>}
+            </div>
           )}
 
-          {intimacyRows.length > 0 && (
-            <>
-              <p className="eyebrow" style={{ margin: "16px 0 8px" }}>Physical intimacy you&rsquo;ve both shared</p>
-              {intimacyRows.map((r) => <RailCard key={`i-${r.cat}-${r.item}`} r={r} />)}
-            </>
-          )}
+          {GROUPS.map((g) => {
+            const grp = rows.filter((r) => r.state === g.state);
+            if (!grp.length) return null;
+            return (
+              <div key={g.state} style={{ marginTop: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, margin: "0 2px 8px" }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: g.dot }} />
+                  <span style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: g.labelInk }}>{g.label}</span>
+                </div>
+                <div style={{ background: g.state === "waiting" ? "#FBF9FC" : "#FFFFFF", border: g.state === "waiting" ? "1px dashed #DDD0E8" : "1px solid #ECE4DE", borderRadius: 14, overflow: "hidden" }}>
+                  {grp.map((r, i) => {
+                    const k = `${r.domain}:${r.cat}:${r.item}`;
+                    const open = openKey === k;
+                    return (
+                      <div key={k}>
+                        {i > 0 && <div style={{ height: 1, background: "#F1EAE4", margin: "0 13px" }} />}
+                        <button
+                          onClick={() => setOpenKey(open ? null : k)}
+                          aria-expanded={open}
+                          style={{ display: "flex", alignItems: "center", gap: 11, width: "100%", background: "none", border: "none", cursor: "pointer", padding: "11px 13px", borderLeft: g.accent ? `4px solid ${g.accent}` : "4px solid transparent" }}
+                        >
+                          <span style={{ width: 30, height: 30, borderRadius: "50%", background: g.tint, color: g.iconInk, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{g.icon({ s: 16 })}</span>
+                          <span style={{ flex: 1, textAlign: "left" }}>
+                            <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "#3F2A4C" }}>{r.item}</span>
+                            <span style={{ display: "block", fontSize: 11, color: g.state === "waiting" ? g.labelInk : "#8A7C93", marginTop: 1, lineHeight: 1.4 }}>{collapsedHint(r)}</span>
+                          </span>
+                          <Chevron open={open} />
+                        </button>
+                        {open && <Panel r={r} g={g} k={k} />}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
 
-          {comfortRows.length === 0 && intimacyRows.length === 0 && !iShareNothing && (
+          {nothingToCompare && !iShareNothing && (
             <p className="small muted" style={{ marginBottom: 14 }}>
               Nothing to compare yet. As you each switch on items to share, they&rsquo;ll appear here.
             </p>
