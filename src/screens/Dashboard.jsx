@@ -26,11 +26,21 @@ export default function Dashboard() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [reflectedAt, setReflectedAt] = useState(null);
+  const [showInvite, setShowInvite] = useState(false);
+  const [hasPriorCheckin, setHasPriorCheckin] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     getDoc(doc(db, "comfortMaps", user.uid)).then((snap) => {
       if (snap.exists()) setReflectedAt(snap.data().updatedAt?.toDate?.() || null);
+    });
+    getDoc(doc(db, "reflections", user.uid)).then((snap) => {
+      const checkins = snap.exists() ? (snap.data().checkins || []) : [];
+      setHasPriorCheckin(checkins.length > 0);
+      const last = checkins.reduce((m, c) => Math.max(m, c.createdAt || 0), 0);
+      const days = last ? (Date.now() - last) / 86400000 : Infinity;
+      // Gentle + periodic: only invite when it has been a while (or never).
+      setShowInvite(days >= 12);
     });
   }, [user]);
 
@@ -65,6 +75,23 @@ export default function Dashboard() {
           you grow, heal, or discover something new.
         </p>
       </div>
+
+      {showInvite && (
+        <div className="card" style={{ marginTop: 12 }}>
+          <div className="rowico" style={{ marginBottom: 4 }}>
+            <Icon name="reflection" size={30} />
+            <span className="small" style={{ fontWeight: 500 }}>A gentle moment for you</span>
+          </div>
+          <p className="tiny muted" style={{ marginTop: 2, lineHeight: 1.55 }}>
+            {hasPriorCheckin
+              ? "Has anything changed since your last reflection? No pressure \u2014 just a moment to notice."
+              : "Whenever you\u2019re ready, take a moment to notice where you are today."}
+          </p>
+          <button className="btn btn-outline" style={{ marginTop: 10 }} onClick={() => nav("/app/reflect")}>
+            Reflect
+          </button>
+        </div>
+      )}
 
       <div className="spacer-sm" />
       <div className="stack">
