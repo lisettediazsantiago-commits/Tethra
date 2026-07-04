@@ -3,20 +3,28 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { compareLevels, COMFORT_CATEGORIES, INTIMACY_CATEGORIES } from "../data/content";
+import { compareLevels, INTIMACY_CATEGORIES } from "../data/content";
 import { IconShield } from "../components/Icons";
 import Icon from "../components/Icon";
 import BackBar from "../components/BackBar";
 
-// Two-party shared spaces. The document id IS the invite code. Each person's
-// RAW comfort/intimacy maps stay owner-locked forever — the only cross-user data
-// is a snapshot of the fields each person explicitly chose to share, copied in by
-// that person. So the most anyone can ever see equals their own Snapshot preview.
+// Two-party shared spaces. The document id IS the invite code. Each person's RAW
+// comfort/intimacy maps stay owner-locked — the only cross-user data is a snapshot
+// of the fields each person chose to share, copied in by that person.
 const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const makeCode = () => Array.from({ length: 7 }, () => CODE_CHARS[Math.floor(Math.random() * CODE_CHARS.length)]).join("");
 const keyOf = (x) => `${x.cat}:${x.item}`;
 const splitKey = (k) => { const i = k.indexOf(":"); return [k.slice(0, i), k.slice(i + 1)]; };
 const catTitle = (cats, key) => (cats.find((c) => c.key === key)?.title || "");
+
+// State colour key (shown as a legend up top).
+const STATE = {
+  shared:  { color: "#8FA87E", label: "Aligned" },
+  talk:    { color: "#D6A55E", label: "Talk", tint: "#FBF2E4", ink: "#8a6a3a", prompt: "Try: \u201cWhat would make this feel easy and welcome for you?\u201d" },
+  slow:    { color: "#D6A0B3", label: "Go slowly", tint: "#FBECF0", ink: "#9c5f77", prompt: "Go gently \u2014 there\u2019s a real difference here. No rush at all." },
+  waiting: { color: "#A98BC0", label: "Waiting on you" },
+};
+const ORDER = { shared: 0, talk: 1, slow: 2, waiting: 3 };
 
 async function buildSnapshot(uid, name) {
   const [c, i] = await Promise.all([
@@ -134,26 +142,58 @@ export default function SharedSpace() {
   const connected = space && space.status === "active" && space.invitedUserId;
   const pending = space && space.status === "pending" && space.createdBy === user?.uid && !space.invitedUserId;
 
-  let comfortRows = [], intimacyRows = [], partnerName = "Your partner";
+  let comfortRows = [], intimacyRows = [], partnerName = "Your partner", iShareNothing = false;
   if (connected && user) {
     const partnerUid = space.createdBy === user.uid ? space.invitedUserId : space.createdBy;
     const me = space.members?.[user.uid] || { comfort: [], intimacy: [] };
     const them = space.members?.[partnerUid] || { comfort: [], intimacy: [], name: "Your partner" };
     partnerName = them.name || "Your partner";
+    iShareNothing = (me.comfort || []).length === 0 && (me.intimacy || []).length === 0;
+
     const cKeys = new Set([...(me.comfort || []).map(keyOf), ...(them.comfort || []).map(keyOf)]);
     comfortRows = [...cKeys].map((k) => {
       const [cat, item] = splitKey(k);
       const mine = (me.comfort || []).find((x) => keyOf(x) === k);
       const theirs = (them.comfort || []).find((x) => keyOf(x) === k);
-      const cmp = (mine && theirs) ? compareLevels(mine.level, theirs.level) : { state: "talk", label: "Only one of you shared" };
-      return { item, cat, mine, theirs, cmp };
-    });
+      let state, note;
+      if (mine && theirs) { state = compareLevels(mine.level, theirs.level).state; note = `You: ${mine.level || "\u2014"} \u00b7 ${partnerName}: ${theirs.level || "\u2014"}`; }
+      else if (theirs) { state = "waiting"; note = `${partnerName} shared this \u2014 you haven\u2019t yet`; }
+      else { state = "waiting"; note = `You shared this \u2014 waiting on ${partnerName}`; }
+      return { item, cat, state, note };
+    }).sort((a, b) => ORDER[a.state] - ORDER[b.state] || a.item.localeCompare(b.item));
+
     const iBoth = (me.intimacy || []).filter((x) => (them.intimacy || []).some((y) => keyOf(y) === keyOf(x)));
     intimacyRows = iBoth.map((x) => {
       const theirs = (them.intimacy || []).find((y) => keyOf(y) === keyOf(x));
-      return { item: x.item, cat: x.cat, mine: x, theirs };
+      const state = x.state && theirs.state && x.state === theirs.state ? "shared" : "talk";
+      return { item: x.item, cat: x.cat, state, note: `You: ${x.state || "\u2014"} \u00b7 ${partnerName}: ${theirs.state || "\u2014"}` };
     });
   }
+
+  const RailCard = ({ r }) => {
+    const st = STATE[r.state] || STATE.waiting;
+    return (
+      <div className="card" style={{ marginBottom: 8, borderLeft: `4px solid ${st.color}` }}>
+        <span className="small" style={{ fontWeight: 500 }}>{r.item}</span>
+        <p className="tiny muted" style={{ marginTop: 4 }}>{r.note}</p>
+        {st.prompt && (
+          <p style={{ fontSize: 11.5, color: st.ink, background: st.tint, borderRadius: 8, padding: "8px 10px", marginTop: 8, lineHeight: 1.45 }}>
+            {st.prompt}
+          </p>
+        )}
+      </div>
+    );
+  };
+
+  const Legend = () => (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 14px", margin: "0 2px 14px", fontSize: 10.5, color: "#9a8fa0" }}>
+      {["shared", "talk", "slow", "waiting"].map((k) => (
+        <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: STATE[k].color }} />{STATE[k].label}
+        </span>
+      ))}
+    </div>
+  );
 
   return (
     <div className="screen">
@@ -191,43 +231,38 @@ export default function SharedSpace() {
             </div>
           </div>
 
-          <p className="eyebrow" style={{ marginBottom: 8 }}>Comfort you&rsquo;ve both shared</p>
-          {comfortRows.length === 0 ? (
-            <p className="small muted" style={{ marginBottom: 14 }}>
-              Neither of you has shared comfort items yet. Toggle sharing on items in your Comfort Map to compare them here.
-            </p>
-          ) : comfortRows.map((r) => (
-            <div className="card" key={`c-${r.cat}-${r.item}`} style={{ marginBottom: 10 }}>
-              <div className="row-between">
-                <span className="small" style={{ fontWeight: 500 }}>{r.item}</span>
-                <span className={`state ${r.cmp.state}`}><span className="dot" />{r.cmp.label}</span>
-              </div>
-              <p className="tiny muted" style={{ marginTop: 7 }}>
-                You: {r.mine?.level || "not shared"} &middot; {partnerName}: {r.theirs?.level || "not shared"}
+          {iShareNothing && (
+            <div className="card" style={{ marginBottom: 14, borderLeft: "4px solid #A98BC0" }}>
+              <p className="small" style={{ fontWeight: 500, marginTop: 0 }}>You haven&rsquo;t shared anything yet</p>
+              <p className="tiny muted" style={{ marginTop: 5, lineHeight: 1.5 }}>
+                {partnerName} has shared some areas. Switch on what you&rsquo;d like them to see, and it&rsquo;ll compare here.
               </p>
-              {r.cmp.state === "talk" && (
-                <p className="suggestion">
-                  A gentle place to begin: &ldquo;What would make this feel easy and welcome for you?&rdquo;
-                </p>
-              )}
+              <button className="btn btn-outline" style={{ marginTop: 10 }} onClick={() => nav("/app/sharing")}>
+                Choose what to share
+              </button>
             </div>
-          ))}
+          )}
+
+          {(comfortRows.length > 0 || intimacyRows.length > 0) && <Legend />}
+
+          {comfortRows.length > 0 && (
+            <>
+              <p className="eyebrow" style={{ marginBottom: 8 }}>Comfort</p>
+              {comfortRows.map((r) => <RailCard key={`c-${r.cat}-${r.item}`} r={r} />)}
+            </>
+          )}
 
           {intimacyRows.length > 0 && (
             <>
               <p className="eyebrow" style={{ margin: "16px 0 8px" }}>Physical intimacy you&rsquo;ve both shared</p>
-              {intimacyRows.map((r) => (
-                <div className="card" key={`i-${r.cat}-${r.item}`} style={{ marginBottom: 10 }}>
-                  <div className="row-between">
-                    <span className="small" style={{ fontWeight: 500 }}>{r.item}</span>
-                    <span className="tiny faint">{catTitle(INTIMACY_CATEGORIES, r.cat)}</span>
-                  </div>
-                  <p className="tiny muted" style={{ marginTop: 7 }}>
-                    You: {r.mine?.state || "\u2014"} &middot; {partnerName}: {r.theirs?.state || "\u2014"}
-                  </p>
-                </div>
-              ))}
+              {intimacyRows.map((r) => <RailCard key={`i-${r.cat}-${r.item}`} r={r} />)}
             </>
+          )}
+
+          {comfortRows.length === 0 && intimacyRows.length === 0 && !iShareNothing && (
+            <p className="small muted" style={{ marginBottom: 14 }}>
+              Nothing to compare yet. As you each switch on items to share, they&rsquo;ll appear here.
+            </p>
           )}
         </>
       ) : pending ? (
