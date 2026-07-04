@@ -23,6 +23,7 @@ import CheckIn from "./screens/CheckIn";
 import Safety from "./screens/Safety";
 import Settings from "./screens/Settings";
 import Identity from "./screens/Identity";
+import ConnectionPreferences from "./screens/ConnectionPreferences";
 
 export default function App() {
   return (
@@ -53,6 +54,7 @@ export default function App() {
               <Route path="moments" element={<Moments />} />
               <Route path="settings" element={<Settings />} />
               <Route path="identity" element={<Identity />} />
+              <Route path="connection" element={<ConnectionPreferences />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />
