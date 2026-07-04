@@ -50,6 +50,8 @@ export default function Dashboard() {
   const groups = [
     {
       label: "Know yourself",
+      color: "#A98BC0",
+      labelColor: "#8E6BA6",
       items: [
         { to: "/app/comfort-map", icon: "comfort-map", title: "Comfort map", sub: "Mark where you are today" },
         { to: "/app/intimacy", icon: "intimacy", title: "Physical intimacy comfort", sub: "Private by default \u00b7 at your pace" },
@@ -58,6 +60,8 @@ export default function Dashboard() {
     },
     {
       label: "Reflect",
+      color: "#8FA87E",
+      labelColor: "#657F55",
       items: [
         { to: "/app/journal", icon: "journal", title: "Reflection journal", sub: "A private space to notice yourself" },
         { to: "/app/timeline", icon: "growth", title: "Growth timeline", sub: "See how you\u2019ve grown, privately" },
@@ -66,6 +70,8 @@ export default function Dashboard() {
     },
     {
       label: "Together",
+      color: "#D6A0B3",
+      labelColor: "#B06B84",
       items: [
         { to: "/app/shared", icon: "shared-space", title: "Shared space", sub: "Understand each other, gently" },
         { to: "/app/check-in", icon: "check-in", title: "Consent check-in", sub: "Before or after time together" },
@@ -73,6 +79,8 @@ export default function Dashboard() {
     },
     {
       label: "Support",
+      color: "#BEB4C6",
+      labelColor: "#7D7B87",
       items: [
         { to: "/safety", icon: "safety-resources", title: "Safety & resources", sub: "Support, anytime" },
       ],
@@ -117,10 +125,10 @@ export default function Dashboard() {
       <div className="spacer-sm" />
       {groups.map((g) => (
         <div key={g.label}>
-          <p className="eyebrow" style={{ margin: "18px 0 8px 2px" }}>{g.label}</p>
+          <p className="eyebrow" style={{ margin: "18px 0 8px 2px", color: g.labelColor }}>{g.label}</p>
           <div className="stack">
             {g.items.map((l) => (
-              <button key={l.to} className="card entry-card" style={{ marginBottom: 10 }} onClick={() => nav(l.to)}>
+              <button key={l.to} className="card entry-card" style={{ marginBottom: 10, borderLeft: `4px solid ${g.color}` }} onClick={() => nav(l.to)}>
                 <Icon name={l.icon} size={40} />
                 <span className="grow">
                   <span className="t">{l.title}</span>
