@@ -3,6 +3,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import Icon from "../components/Icon";
+import { QuietGlyph } from "../components/GlyphIcons";
 import BackBar from "../components/BackBar";
 
 // Connection Preferences — Tethra's take on "notifications." Everything here is
@@ -97,9 +98,9 @@ export default function ConnectionPreferences() {
   const startQuiet = (reason) => { update({ quiet: { active: true, reason } }); setShowQuiet(false); };
   const endQuiet = () => update({ quiet: { active: false, reason: null } });
 
-  const Head = ({ icon, title, right }) => (
+  const Head = ({ icon, glyph, title, right }) => (
     <div className="rowico" style={{ marginTop: 20, marginBottom: 9 }}>
-      <Icon name={icon} size={26} />
+      {glyph ? <span style={{ color: "#8272A0", display: "flex", flex: "none" }}>{glyph}</span> : <Icon name={icon} size={26} />}
       <span className="small" style={{ fontWeight: 600, flex: 1 }}>{title}</span>
       {right}
     </div>
@@ -188,7 +189,7 @@ export default function ConnectionPreferences() {
         <span>{(VOICE.find((v) => v.k === prefs.voice) || VOICE[0]).sample}</span>
       </div>
 
-      <Head icon="pause" title="Quiet mode" />
+      <Head glyph={<QuietGlyph size={24} />} title="Quiet mode" />
       <div style={{ background: "#FBF9FC", border: "1px solid #E7DFEF", borderRadius: 12, padding: "13px 14px" }}>
         {prefs.quiet.active ? (
           <>

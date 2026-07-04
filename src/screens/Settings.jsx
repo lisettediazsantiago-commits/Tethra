@@ -4,7 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import IdentityAvatar, { SYMBOL_LABEL } from "../components/IdentityAvatar";
-import Icon from "../components/Icon";
+import { BellGlyph } from "../components/GlyphIcons";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -49,7 +49,7 @@ export default function Settings() {
       </button>
 
       <button className="card entry-card" style={{ marginTop: 12, width: "100%" }} onClick={() => nav("/app/connection")}>
-        <Icon name="gentle-reminder" size={40} />
+        <span style={{ width: 40, height: 40, borderRadius: "50%", background: "#F0E9F6", color: "#8B6BA6", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><BellGlyph size={21} /></span>
         <span className="grow">
           <span className="t">Connection preferences</span>
           <span className="s">Gentle invitations, on your terms</span>
