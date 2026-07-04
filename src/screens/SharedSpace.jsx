@@ -61,8 +61,21 @@ export default function SharedSpace() {
         setSpaceId(id);
         if (id) {
           const snap = await getDoc(doc(db, "sharedSpaces", id));
-          if (snap.exists()) setSpace(snap.data());
-          else setSpaceId(null);
+          if (snap.exists()) {
+            let s = snap.data();
+            const amMember = s.createdBy === user.uid || s.invitedUserId === user.uid;
+            if (amMember) {
+              // Keep my shared snapshot current, so items switched on since I
+              // connected show up automatically (no manual refresh needed).
+              const name = (user.displayName || "").split(" ")[0] || "You";
+              const mine = await buildSnapshot(user.uid, name);
+              try {
+                await updateDoc(doc(db, "sharedSpaces", id), { [`members.${user.uid}`]: mine, updatedAt: serverTimestamp() });
+                s = { ...s, members: { ...(s.members || {}), [user.uid]: mine } };
+              } catch { /* keep stored snapshot if the sync write fails */ }
+            }
+            setSpace(s);
+          } else setSpaceId(null);
         }
       } catch { /* leave unconnected */ }
       setReady(true);
