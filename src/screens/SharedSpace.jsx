@@ -19,6 +19,12 @@ const splitKey = (k) => { const i = k.indexOf(":"); return [k.slice(0, i), k.sli
 // A gentle, faithful one-line form of a level/state for collapsed hints.
 const short = (lvl) => (lvl ? lvl.charAt(0).toLowerCase() + lvl.slice(1) : "\u2014");
 
+// Aligned-but-cautious: both partners agree on a low comfort level. That's
+// alignment, not ease — so we tag it gently and warm the marker rather than
+// showing a green all-clear. (Comfort items only; intimacy has no ranked scale.)
+const CAUTIOUS_LEVELS = new Set(["Not comfortable", "Maybe later"]);
+const isCautiousAligned = (r) => r.state === "shared" && r.domain === "comfort" && CAUTIOUS_LEVELS.has(r.you);
+
 // Which of two comfort levels is more cautious (lower on the spectrum; "unsure"
 // counts as most exploratory). Returns "a" | "b" | "equal".
 function moreCautious(a, b) {
@@ -248,7 +254,10 @@ export default function SharedSpace() {
 
   const collapsedHint = (r) => {
     if (r.state === "waiting") return r.note;
-    if (r.state === "shared") return `You and ${partnerName} both feel easy here.`;
+    if (r.state === "shared") {
+      const base = `Both ${short(r.you)}`;
+      return isCautiousAligned(r) ? `${base} \u00b7 aligned, just cautious` : base;
+    }
     return `You: ${short(r.you)} \u00b7 ${partnerName}: ${short(r.them)}`;
   };
 
@@ -264,10 +273,13 @@ export default function SharedSpace() {
 
   const Panel = ({ r, g, k }) => {
     if (g.state === "shared") {
+      const caution = isCautiousAligned(r);
       return (
         <div style={{ padding: "0 14px 13px 57px" }}>
           <p style={{ fontSize: 12, color: "#8A7C93", lineHeight: 1.5, margin: 0 }}>
-            You and {partnerName} both feel easy here &mdash; nothing to work out. Let yourself enjoy it.
+            {caution
+              ? <>You and {partnerName} are both at &ldquo;{short(r.you)}&rdquo; here &mdash; aligned, even if it&rsquo;s a cautious spot. No gap to bridge; revisit whenever you like.</>
+              : <>You and {partnerName} both feel easy here &mdash; nothing to work out. Let yourself enjoy it.</>}
           </p>
         </div>
       );
@@ -423,6 +435,7 @@ export default function SharedSpace() {
                   {grp.map((r, i) => {
                     const k = `${r.domain}:${r.cat}:${r.item}`;
                     const open = openKey === k;
+                    const caution = isCautiousAligned(r);
                     return (
                       <div key={k}>
                         {i > 0 && <div style={{ height: 1, background: "#F1EAE4", margin: "0 13px" }} />}
@@ -431,7 +444,7 @@ export default function SharedSpace() {
                           aria-expanded={open}
                           style={{ display: "flex", alignItems: "center", gap: 11, width: "100%", background: "none", border: "none", cursor: "pointer", padding: "11px 13px", borderLeft: g.accent ? `4px solid ${g.accent}` : "4px solid transparent" }}
                         >
-                          <span style={{ width: 30, height: 30, borderRadius: "50%", background: g.tint, color: g.iconInk, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{g.icon({ s: 16 })}</span>
+                          <span style={{ width: 30, height: 30, borderRadius: "50%", background: caution ? "#F3EDE2" : g.tint, color: caution ? "#A98444" : g.iconInk, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>{g.icon({ s: 16 })}</span>
                           <span style={{ flex: 1, textAlign: "left" }}>
                             <span style={{ display: "block", fontSize: 13.5, fontWeight: 600, color: "#3F2A4C" }}>{r.item}</span>
                             <span style={{ display: "block", fontSize: 11, color: g.state === "waiting" ? g.labelInk : "#8A7C93", marginTop: 1, lineHeight: 1.4 }}>{collapsedHint(r)}</span>
