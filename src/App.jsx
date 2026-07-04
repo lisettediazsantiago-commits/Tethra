@@ -12,6 +12,7 @@ import Dashboard from "./screens/Dashboard";
 import ComfortMap from "./screens/ComfortMap";
 import Journal from "./screens/Journal";
 import Snapshot from "./screens/Snapshot";
+import Sharing from "./screens/Sharing";
 import Timeline from "./screens/Timeline";
 import Reflect from "./screens/Reflect";
 import Moments from "./screens/Moments";
@@ -43,6 +44,7 @@ export default function App() {
               <Route path="check-in" element={<CheckIn />} />
               <Route path="journal" element={<Journal />} />
               <Route path="snapshot" element={<Snapshot />} />
+              <Route path="sharing" element={<Sharing />} />
               <Route path="timeline" element={<Timeline />} />
               <Route path="reflect" element={<Reflect />} />
               <Route path="moments" element={<Moments />} />
