@@ -46,6 +46,42 @@ export const GROWTH_PROMPTS = [
   "How has your sense of your own pace changed?",
 ];
 
+// Gentle Reflection Check-in (v1.1 §2). An invitation, never a task. Each option
+// carries a supportive acknowledgment and, where it helps, one gentle next step.
+export const REFLECTION_PROMPT = "Has anything changed since your last reflection?";
+export const REFLECTION_OPTIONS = [
+  {
+    key: "open", label: "I\u2019m feeling more open",
+    ack: "That\u2019s a lovely thing to notice. Openness has its own pace \u2014 there\u2019s no need to rush it. If you\u2019d like, your Comfort Map is a gentle place to let that show.",
+    to: "/app/comfort-map", cta: "Revisit your Comfort Map",
+  },
+  {
+    key: "protective", label: "I\u2019m feeling more protective",
+    ack: "Protecting yourself is wisdom, not retreat. Boundaries can grow stronger whenever you need them to \u2014 you can ease back on anything, anytime.",
+    to: "/app/comfort-map", cta: "Revisit your Comfort Map",
+  },
+  {
+    key: "exploring", label: "I\u2019m exploring new parts of myself",
+    ack: "Exploration deserves room and patience. However this unfolds, it\u2019s yours to move through at your own pace \u2014 your journal can hold whatever you\u2019re discovering.",
+    to: "/app/journal", cta: "Open your journal",
+  },
+  {
+    key: "healing", label: "I\u2019m healing from something",
+    ack: "Healing isn\u2019t linear, and there\u2019s no pace you\u2019re supposed to be at. Be gentle with yourself today. Writing can help when you\u2019re ready \u2014 and only if you want to.",
+    to: "/app/journal", cta: "Open your journal",
+  },
+  {
+    key: "same", label: "I feel about the same",
+    ack: "Steady is completely okay. Not every season is a shift, and there\u2019s nothing you need to change. Thank you for taking the moment to check in with yourself.",
+    to: null, cta: null,
+  },
+  {
+    key: "again", label: "I\u2019d like to reflect again",
+    ack: "Take all the time you need \u2014 there\u2019s no right amount of reflection. Your Growth Timeline is a good place to notice how you\u2019ve been changing.",
+    to: "/app/timeline", cta: "Open your Growth Timeline",
+  },
+];
+
 // Deterministic daily pick: a woven line stays stable across a day and across
 // re-renders, but gently rotates from one day to the next.
 export function dailyPick(arr) {
