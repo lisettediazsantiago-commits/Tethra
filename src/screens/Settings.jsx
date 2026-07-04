@@ -57,6 +57,17 @@ export default function Settings() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
       </button>
 
+      <button className="card entry-card" style={{ marginTop: 12, width: "100%" }} onClick={() => nav("/faq")}>
+        <span style={{ width: 40, height: 40, borderRadius: "50%", background: "#F0E9F6", color: "#8B6BA6", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M9.2 9.3a2.8 2.8 0 015.4 1c0 1.9-2.8 2.5-2.8 2.5" /><path d="M12 17h.01" /></svg>
+        </span>
+        <span className="grow">
+          <span className="t">Questions &amp; answers</span>
+          <span className="s">What Tethra is for, and how to get around</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
+      </button>
+
       <div className="card" style={{ marginTop: 12 }}>
         <p className="small" style={{ fontWeight: 500, marginTop: 0 }}>Privacy</p>
         <p className="tiny muted" style={{ marginTop: 6, lineHeight: 1.6 }}>
