@@ -54,6 +54,7 @@ export default function Dashboard() {
     { to: "/app/check-in", icon: "check-in", title: "Consent check-in", sub: "Before or after time together" },
     { to: "/app/journal", icon: "journal", title: "Reflection journal", sub: "A private space to notice yourself" },
     { to: "/app/timeline", icon: "growth", title: "Growth timeline", sub: "See how you\u2019ve grown, privately" },
+    { to: "/app/moments", icon: "appreciation", title: "Moments of care", sub: "The care you\u2019ve shown yourself" },
     { to: "/blueprint", icon: "blueprint", title: "Your blueprint", sub: "How you enter connection" },
     { to: "/safety", icon: "safety-resources", title: "Safety & resources", sub: "Support, anytime" },
   ];
