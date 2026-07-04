@@ -18,6 +18,7 @@ import Reflect from "./screens/Reflect";
 import Moments from "./screens/Moments";
 import Intimacy from "./screens/Intimacy";
 import SharedSpace from "./screens/SharedSpace";
+import Saved from "./screens/Saved";
 import CheckIn from "./screens/CheckIn";
 import Safety from "./screens/Safety";
 import Settings from "./screens/Settings";
@@ -41,6 +42,7 @@ export default function App() {
               <Route path="comfort-map" element={<ComfortMap />} />
               <Route path="intimacy" element={<Intimacy />} />
               <Route path="shared" element={<SharedSpace />} />
+              <Route path="saved" element={<Saved />} />
               <Route path="check-in" element={<CheckIn />} />
               <Route path="journal" element={<Journal />} />
               <Route path="snapshot" element={<Snapshot />} />
