@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { compareLevels, COMFORT_LEVELS, UNSURE } from "../data/content";
+import { compareLevels, COMFORT_LEVELS, UNSURE, sharedStarter, intimacyStarter } from "../data/content";
 import { IconShield } from "../components/Icons";
 import Icon from "../components/Icon";
 import IdentityAvatar from "../components/IdentityAvatar";
@@ -169,6 +169,15 @@ export default function SharedSpace() {
   const [saved, setSaved] = useState([]);
   const [myIdentity, setMyIdentity] = useState(null);
   const [revealed, setRevealed] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(null);
+
+  function copyLine(key, text) {
+    if (!navigator.clipboard) return;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey((c) => (c === key ? null : c)), 1600);
+    }).catch(() => {});
+  }
 
   const firstName = (user?.displayName || "").split(" ")[0] || "You";
 
@@ -375,6 +384,7 @@ export default function SharedSpace() {
     }
     const talk = g.state === "talk";
     const lines = r.domain === "comfort" ? approachLines(r.you, r.them, partnerName) : null;
+    const starter = r.domain === "comfort" ? sharedStarter(r.item, r.you, r.them) : intimacyStarter(r.item);
     const isSaved = saved.includes(k);
     return (
       <div>
@@ -424,10 +434,33 @@ export default function SharedSpace() {
           )}
         </div>
 
+        {starter && (
+          <div style={{ padding: "12px 14px 0 57px" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9A8AA6", marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h4v6H7c0 1.9 1 3 3 3v1.8c-3 0-5-2-5-4.8V7zm8 0h4v6h-4c0 1.9 1 3 3 3v1.8c-3 0-5-2-5-4.8V7z" /></svg>
+              A way to open it
+            </div>
+            <div style={{ background: "#F6F1F9", border: "1px solid #E9DFF0", borderRadius: 12, padding: "12px 13px" }}>
+              <p style={{ margin: 0, fontSize: 13, color: "#4B2E59", lineHeight: 1.5, fontStyle: "italic" }}>{starter}</p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 10 }}>
+                <span style={{ fontSize: 10.5, color: "#9A8AA6", flex: 1, lineHeight: 1.35 }}>Yours to change &mdash; or say in your own words.</span>
+                <button onClick={() => copyLine(k, starter)} aria-label={copiedKey === k ? "Copied" : "Copy starter"}
+                  style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, cursor: "pointer", flex: "none", borderRadius: 20, padding: "6px 12px", background: "#FFFFFF", color: copiedKey === k ? "#5E7B39" : "#7B5E96", border: `1px solid ${copiedKey === k ? "#BFD3A6" : "#DFD2EA"}` }}>
+                  {copiedKey === k ? (
+                    <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12.5l5 5 11-11" /></svg>Copied</>
+                  ) : (
+                    <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 012-2h10" /></svg>Copy</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "12px 14px 14px 57px" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#8A7C93", flex: 1, lineHeight: 1.4 }}>
             <span style={{ color: talk ? "#C9A24B" : "#CDA0B1", flex: "none" }}>{talk ? <Bulb /> : <Heart s={14} />}</span>
-            {talk ? "Try: start with curiosity. Ask. Listen." : "When you\u2019re both ready. No rush at all."}
+            {talk ? "Start with curiosity. No rush." : "When you\u2019re both ready. No rush at all."}
           </span>
           <button
             onClick={() => toggleSaved(k)}

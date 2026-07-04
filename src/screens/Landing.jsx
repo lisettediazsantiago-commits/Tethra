@@ -35,10 +35,10 @@ export default function Landing() {
           </button>
         </div>
 
-        <button className="link" onClick={() => nav("/why")}
-          style={{ display: "block", margin: "16px auto 0" }}>
-          Why Tethra?
-        </button>
+        <div style={{ display: "flex", gap: 18, justifyContent: "center", margin: "16px auto 0" }}>
+          <button className="link" onClick={() => nav("/why")}>Why Tethra?</button>
+          <button className="link" onClick={() => nav("/faq")}>Questions &amp; answers</button>
+        </div>
 
         <div className="safety-note">
           <Icon name="safety-resources" bare size={13} color="currentColor" /> Not therapy or crisis support &middot;{" "}
