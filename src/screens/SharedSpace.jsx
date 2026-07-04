@@ -3,10 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { compareLevels, COMFORT_LEVELS, UNSURE, sharedStarter, intimacyStarter } from "../data/content";
+import { compareLevels, COMFORT_LEVELS, UNSURE } from "../data/content";
 import { IconShield } from "../components/Icons";
 import Icon from "../components/Icon";
-import IdentityAvatar from "../components/IdentityAvatar";
 import BackBar from "../components/BackBar";
 
 // Two-party shared spaces. The document id IS the invite code. Each person's RAW
@@ -61,10 +60,9 @@ function approachLines(mine, theirs, partnerName) {
 }
 
 async function buildSnapshot(uid, name) {
-  const [c, i, u] = await Promise.all([
+  const [c, i] = await Promise.all([
     getDoc(doc(db, "comfortMaps", uid)),
     getDoc(doc(db, "intimacyMaps", uid)),
-    getDoc(doc(db, "users", uid)),
   ]);
   const cItems = c.exists() ? (c.data().items || {}) : {};
   const iItems = i.exists() ? (i.data().items || {}) : {};
@@ -72,18 +70,7 @@ async function buildSnapshot(uid, name) {
     .map(([k, e]) => { const [cat, item] = splitKey(k); return { cat, item, level: e.level || "", whatHelps: e.whatHelps || "" }; });
   const intimacy = Object.entries(iItems).filter(([, e]) => e && e.visibility === "partner")
     .map(([k, e]) => { const [cat, item] = splitKey(k); return { cat, item, state: e.state || "" }; });
-  // Identity is copied in ONLY when the person's visibility allows it, so a
-  // partner literally never receives a hidden symbol. "private" is never sent;
-  // "onshare" is sent only once they've revealed it in this space.
-  const ud = u.exists() ? u.data() : {};
-  const id = ud.identity || null;
-  const showId = id && id.type === "symbol" && id.symbol &&
-    (id.visibility === "everyone" || (id.visibility === "onshare" && ud.profileRevealed));
-  return {
-    name: name || "Your partner", comfort, intimacy,
-    identity: showId ? { type: "symbol", symbol: id.symbol } : null,
-    sharedAt: Date.now(),
-  };
+  return { name: name || "Your partner", comfort, intimacy, sharedAt: Date.now() };
 }
 
 // Tiny inline icons (stroke, inherit color + size).
@@ -108,54 +95,6 @@ const GROUPS = [
   { state: "waiting", label: "Waiting on you",       dot: "#A98BC0", tint: "#EFE8F5", iconInk: "#8E73A8", labelInk: "#9781AB", icon: (p) => <LockOpen {...p} />, accent: null },
 ];
 
-// A gentle horizon, not a paywall. Sits below the one active space to preview
-// where Tethra is heading — additional Shared Spaces for other relationships —
-// without any "coming soon" urgency. Non-interactive by design.
-const FUTURE_SPACES = [
-  { label: "Partner", icon: (p) => <svg {...box(p)} {...SP}><path d="M12 20S4 15 4 9a4 4 0 018-1 4 4 0 018 1c0 6-8 11-8 11z" /></svg> },
-  { label: "Best friend", icon: (p) => <svg {...box(p)} {...SP}><circle cx="9" cy="8" r="3" /><circle cx="17" cy="9" r="2.3" /><path d="M4 19a5 5 0 0110 0M14.5 19a4.5 4.5 0 016 0" /></svg> },
-  { label: "Family", icon: (p) => <svg {...box(p)} {...SP}><path d="M4 11l8-6 8 6" /><path d="M6 10.5V19h12v-8.5" /><path d="M12 19v-4a1.7 1.7 0 013.3 0V19" /></svg> },
-  { label: "Mentor", icon: (p) => <svg {...box(p)} {...SP}><circle cx="12" cy="12" r="8" /><path d="M12 7.2l1.6 4.4 4.4 1.6-4.4 1.6L12 19l-1.6-4.2L6 13.2l4.4-1.6z" /></svg> },
-  { label: "Close friend", icon: (p) => <svg {...box(p)} {...SP}><path d="M12 10s-3-2.2-3-4.2A2 2 0 0112 4a2 2 0 013 1.8C15 7.8 12 10 12 10z" /><path d="M4 13l4 4 4-1 4 1 4-4" /><path d="M2 12l3 3M22 12l-3 3" /></svg> },
-];
-
-function LookingAhead() {
-  const card = {
-    border: "1.5px dashed #DDD0E8", borderRadius: 14, padding: "14px 12px",
-    display: "flex", flexDirection: "column", alignItems: "center", gap: 8, opacity: 0.62,
-  };
-  return (
-    <div style={{ marginTop: 22 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
-        <span style={{ width: 28, height: 28, borderRadius: "50%", background: "#EDF2E4", color: "#6E8158", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Sprout s={16} /></span>
-        <span style={{ fontSize: 15, fontWeight: 600, color: "#4B2E59" }}>Looking ahead</span>
-      </div>
-      <p style={{ fontSize: 12.5, color: "#7A6E86", lineHeight: 1.6, margin: 0 }}>
-        Tethra begins with one relationship because understanding takes time. As Tethra grows, you&rsquo;ll be
-        able to create Shared Spaces for other meaningful relationships &mdash; friends, family, mentors, and more.
-      </p>
-      <p style={{ fontSize: 12.5, color: "#7A6E86", lineHeight: 1.6, margin: "10px 0 0" }}>
-        For now, we&rsquo;re focused on helping you build one relationship well.
-      </p>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "20px 2px 11px" }}>
-        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9585A2" }}>Future Shared Spaces</span>
-        <span style={{ fontSize: 10.5, color: "#B4A9BE", fontStyle: "italic" }}>Coming in a future update</span>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 }}>
-        {FUTURE_SPACES.map((s, i) => (
-          <div key={s.label} aria-hidden="true" style={{ ...card, gridColumn: i === FUTURE_SPACES.length - 1 && FUTURE_SPACES.length % 2 ? "1 / -1" : "auto" }}>
-            <span style={{ width: 38, height: 38, borderRadius: "50%", background: "#F1E9F6", color: "#9375B4", display: "flex", alignItems: "center", justifyContent: "center" }}>{s.icon(19)}</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#5A4472" }}>{s.label}</span>
-          </div>
-        ))}
-      </div>
-      <p style={{ textAlign: "center", fontSize: 11, color: "#9585A2", fontStyle: "italic", lineHeight: 1.55, margin: "18px 8px 0" }}>
-        Every relationship deserves its own story.
-      </p>
-    </div>
-  );
-}
-
 export default function SharedSpace() {
   const { user } = useAuth();
   const nav = useNavigate();
@@ -167,17 +106,6 @@ export default function SharedSpace() {
   const [err, setErr] = useState("");
   const [openKey, setOpenKey] = useState(null);
   const [saved, setSaved] = useState([]);
-  const [myIdentity, setMyIdentity] = useState(null);
-  const [revealed, setRevealed] = useState(false);
-  const [copiedKey, setCopiedKey] = useState(null);
-
-  function copyLine(key, text) {
-    if (!navigator.clipboard) return;
-    navigator.clipboard.writeText(text).then(() => {
-      setCopiedKey(key);
-      setTimeout(() => setCopiedKey((c) => (c === key ? null : c)), 1600);
-    }).catch(() => {});
-  }
 
   const firstName = (user?.displayName || "").split(" ")[0] || "You";
 
@@ -187,8 +115,6 @@ export default function SharedSpace() {
       try {
         const u = await getDoc(doc(db, "users", user.uid));
         setSaved(u.exists() ? (u.data().savedConversations || []) : []);
-        setMyIdentity(u.exists() ? (u.data().identity || null) : null);
-        setRevealed(u.exists() ? !!u.data().profileRevealed : false);
         const id = u.exists() ? (u.data().sharedSpaceId || null) : null;
         setSpaceId(id);
         if (id) {
@@ -263,30 +189,14 @@ export default function SharedSpace() {
     finally { setBusy(false); }
   }
 
-  // For "only after I choose to share" identity: reveal/hide the symbol to this
-  // partner. Flips the stored flag, then rebuilds the snapshot so the change
-  // reaches (or leaves) their view immediately.
-  async function toggleReveal() {
-    if (!spaceId) return;
-    const next = !revealed;
-    setRevealed(next); setBusy(true); setErr("");
-    try {
-      await setDoc(doc(db, "users", user.uid), { profileRevealed: next }, { merge: true });
-      const mine = await buildSnapshot(user.uid, firstName);
-      await updateDoc(doc(db, "sharedSpaces", spaceId), { [`members.${user.uid}`]: mine, updatedAt: serverTimestamp() });
-      setSpace((s) => (s ? { ...s, members: { ...(s.members || {}), [user.uid]: mine } } : s));
-    } catch { setRevealed(!next); setErr("Couldn\u2019t update that. Please try again."); }
-    finally { setBusy(false); }
-  }
-
   async function disconnect() {
     setBusy(true); setErr("");
     try {
       if (space && space.createdBy === user.uid && !space.invitedUserId && spaceId) {
         await deleteDoc(doc(db, "sharedSpaces", spaceId));
       }
-      await setDoc(doc(db, "users", user.uid), { sharedSpaceId: null, profileRevealed: false }, { merge: true });
-      setSpace(null); setSpaceId(null); setCodeInput(""); setRevealed(false);
+      await setDoc(doc(db, "users", user.uid), { sharedSpaceId: null }, { merge: true });
+      setSpace(null); setSpaceId(null); setCodeInput("");
     } catch { setErr("Couldn\u2019t disconnect. Please try again."); }
     finally { setBusy(false); }
   }
@@ -309,13 +219,12 @@ export default function SharedSpace() {
   const connected = space && space.status === "active" && space.invitedUserId;
   const pending = space && space.status === "pending" && space.createdBy === user?.uid && !space.invitedUserId;
 
-  let rows = [], partnerName = "Your partner", iShareNothing = false, partnerIdentity = null;
+  let rows = [], partnerName = "Your partner", iShareNothing = false;
   if (connected && user) {
     const partnerUid = space.createdBy === user.uid ? space.invitedUserId : space.createdBy;
     const me = space.members?.[user.uid] || { comfort: [], intimacy: [] };
     const them = space.members?.[partnerUid] || { comfort: [], intimacy: [], name: "Your partner" };
     partnerName = them.name || "Your partner";
-    partnerIdentity = them.identity || null;
     iShareNothing = (me.comfort || []).length === 0 && (me.intimacy || []).length === 0;
 
     const cKeys = new Set([...(me.comfort || []).map(keyOf), ...(them.comfort || []).map(keyOf)]);
@@ -384,7 +293,6 @@ export default function SharedSpace() {
     }
     const talk = g.state === "talk";
     const lines = r.domain === "comfort" ? approachLines(r.you, r.them, partnerName) : null;
-    const starter = r.domain === "comfort" ? sharedStarter(r.item, r.you, r.them) : intimacyStarter(r.item);
     const isSaved = saved.includes(k);
     return (
       <div>
@@ -434,33 +342,10 @@ export default function SharedSpace() {
           )}
         </div>
 
-        {starter && (
-          <div style={{ padding: "12px 14px 0 57px" }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.05em", textTransform: "uppercase", color: "#9A8AA6", marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h4v6H7c0 1.9 1 3 3 3v1.8c-3 0-5-2-5-4.8V7zm8 0h4v6h-4c0 1.9 1 3 3 3v1.8c-3 0-5-2-5-4.8V7z" /></svg>
-              A way to open it
-            </div>
-            <div style={{ background: "#F6F1F9", border: "1px solid #E9DFF0", borderRadius: 12, padding: "12px 13px" }}>
-              <p style={{ margin: 0, fontSize: 13, color: "#4B2E59", lineHeight: 1.5, fontStyle: "italic" }}>{starter}</p>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginTop: 10 }}>
-                <span style={{ fontSize: 10.5, color: "#9A8AA6", flex: 1, lineHeight: 1.35 }}>Yours to change &mdash; or say in your own words.</span>
-                <button onClick={() => copyLine(k, starter)} aria-label={copiedKey === k ? "Copied" : "Copy starter"}
-                  style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, cursor: "pointer", flex: "none", borderRadius: 20, padding: "6px 12px", background: "#FFFFFF", color: copiedKey === k ? "#5E7B39" : "#7B5E96", border: `1px solid ${copiedKey === k ? "#BFD3A6" : "#DFD2EA"}` }}>
-                  {copiedKey === k ? (
-                    <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12.5l5 5 11-11" /></svg>Copied</>
-                  ) : (
-                    <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 012-2h10" /></svg>Copy</>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "12px 14px 14px 57px" }}>
           <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#8A7C93", flex: 1, lineHeight: 1.4 }}>
             <span style={{ color: talk ? "#C9A24B" : "#CDA0B1", flex: "none" }}>{talk ? <Bulb /> : <Heart s={14} />}</span>
-            {talk ? "Start with curiosity. No rush." : "When you\u2019re both ready. No rush at all."}
+            {talk ? "Try: start with curiosity. Ask. Listen." : "When you\u2019re both ready. No rush at all."}
           </span>
           <button
             onClick={() => toggleSaved(k)}
@@ -501,20 +386,11 @@ export default function SharedSpace() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
       </button>
 
-      <button className="card entry-card" style={{ marginBottom: 12, width: "100%" }} onClick={() => nav("/app/saved")}>
-        <span style={{ width: 40, height: 40, borderRadius: "50%", background: "#F0E9F6", color: "#8B6BA6", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Heart s={20} filled /></span>
-        <span className="grow">
-          <span className="t">Saved conversations</span>
-          <span className="s">{saved.length > 0 ? `${saved.length} kept to come back to` : "Tap the heart on any difference to keep it here"}</span>
-        </span>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
-      </button>
-
       {!ready ? null : connected ? (
         <>
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="rowico" style={{ marginBottom: 4 }}>
-              <IdentityAvatar identity={partnerIdentity} name={partnerName} size={30} />
+              <Icon name="shared-space" size={30} />
               <span className="small" style={{ fontWeight: 500 }}>Connected with {partnerName}</span>
             </div>
             <p className="tiny muted" style={{ marginTop: 2, lineHeight: 1.5 }}>
@@ -524,30 +400,6 @@ export default function SharedSpace() {
               <button className="link" disabled={busy} onClick={refreshMyShare}>Update what I share</button>
               <button className="link" disabled={busy} onClick={disconnect}>Disconnect</button>
             </div>
-
-            {myIdentity?.type === "symbol" && myIdentity.symbol && (
-              <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 12, paddingTop: 11, borderTop: "1px solid #F1EAE4" }}>
-                <IdentityAvatar identity={myIdentity} name={firstName} size={26} />
-                {myIdentity.visibility === "onshare" ? (
-                  <>
-                    <span className="tiny muted" style={{ flex: 1, lineHeight: 1.4 }}>
-                      Your symbol is {revealed ? `visible to ${partnerName}` : "hidden for now"}.
-                    </span>
-                    <button className="link" disabled={busy} onClick={toggleReveal} style={{ flex: "none" }}>
-                      {revealed ? "Hide" : "Show " + partnerName}
-                    </button>
-                  </>
-                ) : myIdentity.visibility === "private" ? (
-                  <span className="tiny muted" style={{ flex: 1, lineHeight: 1.4 }}>
-                    Your symbol stays private &mdash; {partnerName} sees your initials.
-                  </span>
-                ) : (
-                  <span className="tiny muted" style={{ flex: 1, lineHeight: 1.4 }}>
-                    {partnerName} can see your symbol.
-                  </span>
-                )}
-              </div>
-            )}
           </div>
 
           {iShareNothing && (
@@ -613,8 +465,6 @@ export default function SharedSpace() {
               Nothing to compare yet. As you each switch on items to share, they&rsquo;ll appear here.
             </p>
           )}
-
-          <LookingAhead />
         </>
       ) : pending ? (
         <div className="card">
