@@ -8,6 +8,7 @@ import Spectrum from "../components/Spectrum";
 import { IconLock, IconHeart, IconEye } from "../components/Icons";
 import ComfortWheel from "../components/ComfortWheel";
 import IntimacyPanel from "../components/IntimacyPanel";
+import BackBar from "../components/BackBar";
 
 const keyOf = (cat, item) => `${cat}:${item}`;
 
@@ -82,6 +83,7 @@ export default function ComfortMap() {
 
   return (
     <div className="screen">
+      <BackBar />
       <div className="head">
         <h1 className="display">My Comfort Map</h1>
         <p className="small muted" style={{ marginTop: 6 }}>Explore what matters to you.</p>

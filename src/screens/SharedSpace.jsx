@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { compareLevels } from "../data/content";
 import { IconShield } from "../components/Icons";
 import Icon from "../components/Icon";
+import BackBar from "../components/BackBar";
 
 // Illustrative sample so the shared view is understandable before a partner joins.
 // Real spaces compare each person's *shareable* fields only — never private notes.
@@ -43,6 +44,7 @@ export default function SharedSpace() {
 
   return (
     <div className="screen">
+      <BackBar />
       <div className="head">
         <h1 className="display">Shared space</h1>
         <p className="small muted" style={{ marginTop: 6 }}>

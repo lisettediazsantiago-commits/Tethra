@@ -3,6 +3,7 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { CHECKIN } from "../data/content";
+import BackBar from "../components/BackBar";
 
 export default function CheckIn() {
   const { user } = useAuth();
@@ -32,6 +33,7 @@ export default function CheckIn() {
 
   return (
     <div className="screen">
+      <BackBar />
       <div className="head">
         <h1 className="display">Check-in</h1>
         <p className="small muted" style={{ marginTop: 6 }}>
