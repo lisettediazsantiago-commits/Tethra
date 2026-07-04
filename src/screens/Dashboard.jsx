@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { TETHRA_QUOTES, dailyPick } from "../data/content";
@@ -28,11 +28,18 @@ export default function Dashboard() {
   const [reflectedAt, setReflectedAt] = useState(null);
   const [showInvite, setShowInvite] = useState(false);
   const [hasPriorCheckin, setHasPriorCheckin] = useState(false);
+  const [identity, setIdentity] = useState(undefined);
+  const [introDismissed, setIntroDismissed] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     getDoc(doc(db, "comfortMaps", user.uid)).then((snap) => {
       if (snap.exists()) setReflectedAt(snap.data().updatedAt?.toDate?.() || null);
+    });
+    getDoc(doc(db, "users", user.uid)).then((snap) => {
+      const d = snap.exists() ? snap.data() : {};
+      setIdentity(d.identity || null);
+      setIntroDismissed(!!d.identityIntroDismissed);
     });
     getDoc(doc(db, "reflections", user.uid)).then((snap) => {
       const checkins = snap.exists() ? (snap.data().checkins || []) : [];
@@ -46,6 +53,11 @@ export default function Dashboard() {
 
   const name = user?.displayName?.split(" ")[0] || "there";
   const quote = dailyPick(TETHRA_QUOTES);
+
+  function dismissIdentityIntro() {
+    setIntroDismissed(true);
+    if (user) setDoc(doc(db, "users", user.uid), { identityIntroDismissed: true }, { merge: true }).catch(() => {});
+  }
 
   const groups = [
     {
@@ -104,6 +116,23 @@ export default function Dashboard() {
           you grow, heal, or discover something new.
         </p>
       </div>
+
+      {identity === null && !introDismissed && (
+        <div className="card" style={{ marginTop: 12 }}>
+          <div className="rowico" style={{ marginBottom: 4 }}>
+            <Icon name="profile" size={30} />
+            <span className="small" style={{ fontWeight: 500 }}>How would others recognize you?</span>
+          </div>
+          <p className="tiny muted" style={{ marginTop: 2, lineHeight: 1.55 }}>
+            Choose a symbol or your initials to represent you &mdash; no photo needed. Identity is intentional
+            here, never required.
+          </p>
+          <div style={{ display: "flex", gap: 16, marginTop: 10, alignItems: "center" }}>
+            <button className="btn btn-outline" onClick={() => nav("/app/identity")}>Choose how I&rsquo;m seen</button>
+            <button className="link" onClick={dismissIdentityIntro}>Maybe later</button>
+          </div>
+        </div>
+      )}
 
       {showInvite && (
         <div className="card" style={{ marginTop: 12 }}>

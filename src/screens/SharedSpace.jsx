@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { compareLevels, COMFORT_LEVELS, UNSURE } from "../data/content";
 import { IconShield } from "../components/Icons";
 import Icon from "../components/Icon";
+import IdentityAvatar from "../components/IdentityAvatar";
 import BackBar from "../components/BackBar";
 
 // Two-party shared spaces. The document id IS the invite code. Each person's RAW
@@ -60,9 +61,10 @@ function approachLines(mine, theirs, partnerName) {
 }
 
 async function buildSnapshot(uid, name) {
-  const [c, i] = await Promise.all([
+  const [c, i, u] = await Promise.all([
     getDoc(doc(db, "comfortMaps", uid)),
     getDoc(doc(db, "intimacyMaps", uid)),
+    getDoc(doc(db, "users", uid)),
   ]);
   const cItems = c.exists() ? (c.data().items || {}) : {};
   const iItems = i.exists() ? (i.data().items || {}) : {};
@@ -70,7 +72,18 @@ async function buildSnapshot(uid, name) {
     .map(([k, e]) => { const [cat, item] = splitKey(k); return { cat, item, level: e.level || "", whatHelps: e.whatHelps || "" }; });
   const intimacy = Object.entries(iItems).filter(([, e]) => e && e.visibility === "partner")
     .map(([k, e]) => { const [cat, item] = splitKey(k); return { cat, item, state: e.state || "" }; });
-  return { name: name || "Your partner", comfort, intimacy, sharedAt: Date.now() };
+  // Identity is copied in ONLY when the person's visibility allows it, so a
+  // partner literally never receives a hidden symbol. "private" is never sent;
+  // "onshare" is sent only once they've revealed it in this space.
+  const ud = u.exists() ? u.data() : {};
+  const id = ud.identity || null;
+  const showId = id && id.type === "symbol" && id.symbol &&
+    (id.visibility === "everyone" || (id.visibility === "onshare" && ud.profileRevealed));
+  return {
+    name: name || "Your partner", comfort, intimacy,
+    identity: showId ? { type: "symbol", symbol: id.symbol } : null,
+    sharedAt: Date.now(),
+  };
 }
 
 // Tiny inline icons (stroke, inherit color + size).
@@ -106,6 +119,8 @@ export default function SharedSpace() {
   const [err, setErr] = useState("");
   const [openKey, setOpenKey] = useState(null);
   const [saved, setSaved] = useState([]);
+  const [myIdentity, setMyIdentity] = useState(null);
+  const [revealed, setRevealed] = useState(false);
 
   const firstName = (user?.displayName || "").split(" ")[0] || "You";
 
@@ -115,6 +130,8 @@ export default function SharedSpace() {
       try {
         const u = await getDoc(doc(db, "users", user.uid));
         setSaved(u.exists() ? (u.data().savedConversations || []) : []);
+        setMyIdentity(u.exists() ? (u.data().identity || null) : null);
+        setRevealed(u.exists() ? !!u.data().profileRevealed : false);
         const id = u.exists() ? (u.data().sharedSpaceId || null) : null;
         setSpaceId(id);
         if (id) {
@@ -189,14 +206,30 @@ export default function SharedSpace() {
     finally { setBusy(false); }
   }
 
+  // For "only after I choose to share" identity: reveal/hide the symbol to this
+  // partner. Flips the stored flag, then rebuilds the snapshot so the change
+  // reaches (or leaves) their view immediately.
+  async function toggleReveal() {
+    if (!spaceId) return;
+    const next = !revealed;
+    setRevealed(next); setBusy(true); setErr("");
+    try {
+      await setDoc(doc(db, "users", user.uid), { profileRevealed: next }, { merge: true });
+      const mine = await buildSnapshot(user.uid, firstName);
+      await updateDoc(doc(db, "sharedSpaces", spaceId), { [`members.${user.uid}`]: mine, updatedAt: serverTimestamp() });
+      setSpace((s) => (s ? { ...s, members: { ...(s.members || {}), [user.uid]: mine } } : s));
+    } catch { setRevealed(!next); setErr("Couldn\u2019t update that. Please try again."); }
+    finally { setBusy(false); }
+  }
+
   async function disconnect() {
     setBusy(true); setErr("");
     try {
       if (space && space.createdBy === user.uid && !space.invitedUserId && spaceId) {
         await deleteDoc(doc(db, "sharedSpaces", spaceId));
       }
-      await setDoc(doc(db, "users", user.uid), { sharedSpaceId: null }, { merge: true });
-      setSpace(null); setSpaceId(null); setCodeInput("");
+      await setDoc(doc(db, "users", user.uid), { sharedSpaceId: null, profileRevealed: false }, { merge: true });
+      setSpace(null); setSpaceId(null); setCodeInput(""); setRevealed(false);
     } catch { setErr("Couldn\u2019t disconnect. Please try again."); }
     finally { setBusy(false); }
   }
@@ -219,12 +252,13 @@ export default function SharedSpace() {
   const connected = space && space.status === "active" && space.invitedUserId;
   const pending = space && space.status === "pending" && space.createdBy === user?.uid && !space.invitedUserId;
 
-  let rows = [], partnerName = "Your partner", iShareNothing = false;
+  let rows = [], partnerName = "Your partner", iShareNothing = false, partnerIdentity = null;
   if (connected && user) {
     const partnerUid = space.createdBy === user.uid ? space.invitedUserId : space.createdBy;
     const me = space.members?.[user.uid] || { comfort: [], intimacy: [] };
     const them = space.members?.[partnerUid] || { comfort: [], intimacy: [], name: "Your partner" };
     partnerName = them.name || "Your partner";
+    partnerIdentity = them.identity || null;
     iShareNothing = (me.comfort || []).length === 0 && (me.intimacy || []).length === 0;
 
     const cKeys = new Set([...(me.comfort || []).map(keyOf), ...(them.comfort || []).map(keyOf)]);
@@ -399,7 +433,7 @@ export default function SharedSpace() {
         <>
           <div className="card" style={{ marginBottom: 14 }}>
             <div className="rowico" style={{ marginBottom: 4 }}>
-              <Icon name="shared-space" size={30} />
+              <IdentityAvatar identity={partnerIdentity} name={partnerName} size={30} />
               <span className="small" style={{ fontWeight: 500 }}>Connected with {partnerName}</span>
             </div>
             <p className="tiny muted" style={{ marginTop: 2, lineHeight: 1.5 }}>
@@ -409,6 +443,30 @@ export default function SharedSpace() {
               <button className="link" disabled={busy} onClick={refreshMyShare}>Update what I share</button>
               <button className="link" disabled={busy} onClick={disconnect}>Disconnect</button>
             </div>
+
+            {myIdentity?.type === "symbol" && myIdentity.symbol && (
+              <div style={{ display: "flex", alignItems: "center", gap: 9, marginTop: 12, paddingTop: 11, borderTop: "1px solid #F1EAE4" }}>
+                <IdentityAvatar identity={myIdentity} name={firstName} size={26} />
+                {myIdentity.visibility === "onshare" ? (
+                  <>
+                    <span className="tiny muted" style={{ flex: 1, lineHeight: 1.4 }}>
+                      Your symbol is {revealed ? `visible to ${partnerName}` : "hidden for now"}.
+                    </span>
+                    <button className="link" disabled={busy} onClick={toggleReveal} style={{ flex: "none" }}>
+                      {revealed ? "Hide" : "Show " + partnerName}
+                    </button>
+                  </>
+                ) : myIdentity.visibility === "private" ? (
+                  <span className="tiny muted" style={{ flex: 1, lineHeight: 1.4 }}>
+                    Your symbol stays private &mdash; {partnerName} sees your initials.
+                  </span>
+                ) : (
+                  <span className="tiny muted" style={{ flex: 1, lineHeight: 1.4 }}>
+                    {partnerName} can see your symbol.
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           {iShareNothing && (
