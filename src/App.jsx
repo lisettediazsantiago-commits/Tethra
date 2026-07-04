@@ -22,6 +22,7 @@ import Saved from "./screens/Saved";
 import CheckIn from "./screens/CheckIn";
 import Safety from "./screens/Safety";
 import Settings from "./screens/Settings";
+import Identity from "./screens/Identity";
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
               <Route path="reflect" element={<Reflect />} />
               <Route path="moments" element={<Moments />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="identity" element={<Identity />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />
