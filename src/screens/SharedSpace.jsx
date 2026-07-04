@@ -108,6 +108,54 @@ const GROUPS = [
   { state: "waiting", label: "Waiting on you",       dot: "#A98BC0", tint: "#EFE8F5", iconInk: "#8E73A8", labelInk: "#9781AB", icon: (p) => <LockOpen {...p} />, accent: null },
 ];
 
+// A gentle horizon, not a paywall. Sits below the one active space to preview
+// where Tethra is heading — additional Shared Spaces for other relationships —
+// without any "coming soon" urgency. Non-interactive by design.
+const FUTURE_SPACES = [
+  { label: "Partner", icon: (p) => <svg {...box(p)} {...SP}><path d="M12 20S4 15 4 9a4 4 0 018-1 4 4 0 018 1c0 6-8 11-8 11z" /></svg> },
+  { label: "Best friend", icon: (p) => <svg {...box(p)} {...SP}><circle cx="9" cy="8" r="3" /><circle cx="17" cy="9" r="2.3" /><path d="M4 19a5 5 0 0110 0M14.5 19a4.5 4.5 0 016 0" /></svg> },
+  { label: "Family", icon: (p) => <svg {...box(p)} {...SP}><path d="M4 11l8-6 8 6" /><path d="M6 10.5V19h12v-8.5" /><path d="M12 19v-4a1.7 1.7 0 013.3 0V19" /></svg> },
+  { label: "Mentor", icon: (p) => <svg {...box(p)} {...SP}><circle cx="12" cy="12" r="8" /><path d="M12 7.2l1.6 4.4 4.4 1.6-4.4 1.6L12 19l-1.6-4.2L6 13.2l4.4-1.6z" /></svg> },
+  { label: "Close friend", icon: (p) => <svg {...box(p)} {...SP}><path d="M12 10s-3-2.2-3-4.2A2 2 0 0112 4a2 2 0 013 1.8C15 7.8 12 10 12 10z" /><path d="M4 13l4 4 4-1 4 1 4-4" /><path d="M2 12l3 3M22 12l-3 3" /></svg> },
+];
+
+function LookingAhead() {
+  const card = {
+    border: "1.5px dashed #DDD0E8", borderRadius: 14, padding: "14px 12px",
+    display: "flex", flexDirection: "column", alignItems: "center", gap: 8, opacity: 0.62,
+  };
+  return (
+    <div style={{ marginTop: 22 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
+        <span style={{ width: 28, height: 28, borderRadius: "50%", background: "#EDF2E4", color: "#6E8158", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Sprout s={16} /></span>
+        <span style={{ fontSize: 15, fontWeight: 600, color: "#4B2E59" }}>Looking ahead</span>
+      </div>
+      <p style={{ fontSize: 12.5, color: "#7A6E86", lineHeight: 1.6, margin: 0 }}>
+        Tethra begins with one relationship because understanding takes time. As Tethra grows, you&rsquo;ll be
+        able to create Shared Spaces for other meaningful relationships &mdash; friends, family, mentors, and more.
+      </p>
+      <p style={{ fontSize: 12.5, color: "#7A6E86", lineHeight: 1.6, margin: "10px 0 0" }}>
+        For now, we&rsquo;re focused on helping you build one relationship well.
+      </p>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", margin: "20px 2px 11px" }}>
+        <span style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "#9585A2" }}>Future Shared Spaces</span>
+        <span style={{ fontSize: 10.5, color: "#B4A9BE", fontStyle: "italic" }}>Coming in a future update</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 }}>
+        {FUTURE_SPACES.map((s, i) => (
+          <div key={s.label} aria-hidden="true" style={{ ...card, gridColumn: i === FUTURE_SPACES.length - 1 && FUTURE_SPACES.length % 2 ? "1 / -1" : "auto" }}>
+            <span style={{ width: 38, height: 38, borderRadius: "50%", background: "#F1E9F6", color: "#9375B4", display: "flex", alignItems: "center", justifyContent: "center" }}>{s.icon(19)}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#5A4472" }}>{s.label}</span>
+          </div>
+        ))}
+      </div>
+      <p style={{ textAlign: "center", fontSize: 11, color: "#9585A2", fontStyle: "italic", lineHeight: 1.55, margin: "18px 8px 0" }}>
+        Every relationship deserves its own story.
+      </p>
+    </div>
+  );
+}
+
 export default function SharedSpace() {
   const { user } = useAuth();
   const nav = useNavigate();
@@ -532,6 +580,8 @@ export default function SharedSpace() {
               Nothing to compare yet. As you each switch on items to share, they&rsquo;ll appear here.
             </p>
           )}
+
+          <LookingAhead />
         </>
       ) : pending ? (
         <div className="card">
