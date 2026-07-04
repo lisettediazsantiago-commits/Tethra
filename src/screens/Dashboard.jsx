@@ -47,16 +47,36 @@ export default function Dashboard() {
   const name = user?.displayName?.split(" ")[0] || "there";
   const quote = dailyPick(TETHRA_QUOTES);
 
-  const links = [
-    { to: "/app/comfort-map", icon: "comfort-map", title: "Comfort map", sub: "Mark where you are today" },
-    { to: "/app/intimacy", icon: "intimacy", title: "Physical intimacy comfort", sub: "Private by default \u00b7 at your pace" },
-    { to: "/app/shared", icon: "shared-space", title: "Shared space", sub: "Understand each other, gently" },
-    { to: "/app/check-in", icon: "check-in", title: "Consent check-in", sub: "Before or after time together" },
-    { to: "/app/journal", icon: "journal", title: "Reflection journal", sub: "A private space to notice yourself" },
-    { to: "/app/timeline", icon: "growth", title: "Growth timeline", sub: "See how you\u2019ve grown, privately" },
-    { to: "/app/moments", icon: "appreciation", title: "Moments of care", sub: "The care you\u2019ve shown yourself" },
-    { to: "/blueprint", icon: "blueprint", title: "Your blueprint", sub: "How you enter connection" },
-    { to: "/safety", icon: "safety-resources", title: "Safety & resources", sub: "Support, anytime" },
+  const groups = [
+    {
+      label: "Know yourself",
+      items: [
+        { to: "/app/comfort-map", icon: "comfort-map", title: "Comfort map", sub: "Mark where you are today" },
+        { to: "/app/intimacy", icon: "intimacy", title: "Physical intimacy comfort", sub: "Private by default \u00b7 at your pace" },
+        { to: "/blueprint", icon: "blueprint", title: "Your blueprint", sub: "How you enter connection" },
+      ],
+    },
+    {
+      label: "Reflect",
+      items: [
+        { to: "/app/journal", icon: "journal", title: "Reflection journal", sub: "A private space to notice yourself" },
+        { to: "/app/timeline", icon: "growth", title: "Growth timeline", sub: "See how you\u2019ve grown, privately" },
+        { to: "/app/moments", icon: "appreciation", title: "Moments of care", sub: "The care you\u2019ve shown yourself" },
+      ],
+    },
+    {
+      label: "Together",
+      items: [
+        { to: "/app/shared", icon: "shared-space", title: "Shared space", sub: "Understand each other, gently" },
+        { to: "/app/check-in", icon: "check-in", title: "Consent check-in", sub: "Before or after time together" },
+      ],
+    },
+    {
+      label: "Support",
+      items: [
+        { to: "/safety", icon: "safety-resources", title: "Safety & resources", sub: "Support, anytime" },
+      ],
+    },
   ];
 
   return (
@@ -95,18 +115,23 @@ export default function Dashboard() {
       )}
 
       <div className="spacer-sm" />
-      <div className="stack">
-        {links.map((l) => (
-          <button key={l.to} className="card entry-card" style={{ marginBottom: 10 }} onClick={() => nav(l.to)}>
-            <Icon name={l.icon} size={40} />
-            <span className="grow">
-              <span className="t">{l.title}</span>
-              <span className="s">{l.sub}</span>
-            </span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
-          </button>
-        ))}
-      </div>
+      {groups.map((g) => (
+        <div key={g.label}>
+          <p className="eyebrow" style={{ margin: "18px 0 8px 2px" }}>{g.label}</p>
+          <div className="stack">
+            {g.items.map((l) => (
+              <button key={l.to} className="card entry-card" style={{ marginBottom: 10 }} onClick={() => nav(l.to)}>
+                <Icon name={l.icon} size={40} />
+                <span className="grow">
+                  <span className="t">{l.title}</span>
+                  <span className="s">{l.sub}</span>
+                </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
 
       {quote && (
         <p className="tiny faint center" style={{ marginTop: 22, fontStyle: "italic", lineHeight: 1.5 }}>
