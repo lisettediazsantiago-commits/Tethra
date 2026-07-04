@@ -3,7 +3,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import Icon from "../components/Icon";
-import { QuietGlyph } from "../components/GlyphIcons";
+import { BellGlyph, QuietGlyph } from "../components/GlyphIcons";
 import BackBar from "../components/BackBar";
 
 // Connection Preferences — Tethra's take on "notifications." Everything here is
@@ -116,7 +116,7 @@ export default function ConnectionPreferences() {
         </p>
       </div>
 
-      <Head icon="gentle-reminder" title="How Tethra shows up" />
+      <Head glyph={<BellGlyph size={22} />} title="How Tethra shows up" />
       {CADENCE.map((c) => (
         <button key={c.k} onClick={() => update({ cadence: c.k })} aria-pressed={prefs.cadence === c.k} style={row(prefs.cadence === c.k)}>
           <span style={dot(prefs.cadence === c.k)}>{prefs.cadence === c.k && <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#8B6BA6" }} />}</span>
