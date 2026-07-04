@@ -326,6 +326,31 @@ export function opener(item, level) {
   }
 }
 
+// Shared-space conversation starter. Tuned to the topic AND to the MORE CAUTIOUS
+// of the two comfort levels, which always sets the pace. Invitational: it opens
+// the door and offers to match the other's pace, and never scripts them.
+const STARTER_BY_LEVEL = {
+  "Not comfortable": "I\u2019d love to understand how you feel about {t} \u2014 no pressure, and no wrong answer.",
+  "Maybe later": "Where are you with {t} these days? No timeline \u2014 I just want to stay on the same page.",
+  "Open with conversation": "What would make {t} feel easy and welcome for you?",
+  "Comfortable": "I feel good about {t} \u2014 how\u2019s it sitting with you? I\u2019d love a pace that works for both of us.",
+  "Very comfortable": "I\u2019m really at ease with {t} \u2014 I\u2019d love to hear how you\u2019re feeling, and match your pace.",
+  [UNSURE]: "No pressure at all \u2014 where are you with {t} right now? I\u2019m still finding my own footing too.",
+};
+export function sharedStarter(item, a, b) {
+  if (!item) return null;
+  const t = item.charAt(0).toLowerCase() + item.slice(1);
+  const rank = (x) => (x === UNSURE ? -1 : COMFORT_LEVELS.indexOf(x));
+  const cautious = rank(a) <= rank(b) ? a : b; // lower / unsure sets the pace
+  const tmpl = STARTER_BY_LEVEL[cautious] || STARTER_BY_LEVEL["Open with conversation"];
+  return "\u201c" + tmpl.replace("{t}", t) + "\u201d";
+}
+export function intimacyStarter(item) {
+  if (!item) return null;
+  const t = item.charAt(0).toLowerCase() + item.slice(1);
+  return "\u201cI\u2019d love to hear how you feel about " + t + ", whenever it feels right \u2014 no pressure.\u201d";
+}
+
 // ------------------------------------------------------------------
 // Physical Intimacy Comfort — a dedicated, consent-first section.
 // Framed for self-awareness and clear communication, never as
