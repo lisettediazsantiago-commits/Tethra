@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { compareLevels } from "../data/content";
 import { IconShield } from "../components/Icons";
+import Icon from "../components/Icon";
 
 // Illustrative sample so the shared view is understandable before a partner joins.
 // Real spaces compare each person's *shareable* fields only — never private notes.
@@ -15,6 +17,7 @@ const SAMPLE = [
 
 export default function SharedSpace() {
   const { user } = useAuth();
+  const nav = useNavigate();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -47,6 +50,15 @@ export default function SharedSpace() {
           and gentle conversation invitations.
         </p>
       </div>
+
+      <button className="card entry-card" style={{ marginBottom: 12, width: "100%" }} onClick={() => nav("/app/snapshot")}>
+        <Icon name="privacy" size={40} />
+        <span className="grow">
+          <span className="t">Preview my snapshot</span>
+          <span className="s">See exactly what a partner would see</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
+      </button>
 
       <div className="card">
         <p className="small" style={{ fontWeight: 500, marginTop: 0 }}>Invite someone to share</p>
