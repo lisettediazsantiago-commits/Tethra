@@ -5,6 +5,38 @@ import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { TETHRA_QUOTES, dailyPick } from "../data/content";
 import Icon from "../components/Icon";
+import { PREF_DEFAULTS } from "./ConnectionPreferences";
+
+// In-app "invitations" (never alarms). We surface at most one, only when a real
+// signal is present, and word it in the person's chosen voice. Quiet mode and a
+// "never" reflection frequency silence everything.
+const INVITE_COPY = {
+  reflection: {
+    gentle: "A quiet moment might be waiting for you whenever you\u2019re ready.",
+    encouraging: "A small reflection today could strengthen tomorrow.",
+    reflective: "Growth often begins with curiosity \u2014 a reflection is here when it feels right.",
+    minimal: "A reflection is waiting.",
+  },
+  conversation: {
+    gentle: "There\u2019s a conversation here waiting whenever it feels right.",
+    encouraging: "A small conversation could bring you closer \u2014 it\u2019s here when you\u2019re ready.",
+    reflective: "Understanding grows one conversation at a time. One is waiting.",
+    minimal: "A saved conversation is waiting.",
+  },
+};
+const FREQ_DAYS = { weekly: 7, biweekly: 14, monthly: 30, ai: 12 };
+
+function decideInvitation(prefs, reflectDays, savedCount) {
+  if (prefs.quiet?.active) return null;
+  const voice = prefs.voice || "gentle";
+  if (prefs.reflectionFreq !== "never" && reflectDays >= (FREQ_DAYS[prefs.reflectionFreq] || 12)) {
+    return { kind: "reflection", icon: "reflection", line: INVITE_COPY.reflection[voice] || INVITE_COPY.reflection.gentle, cta: "Reflect", to: "/app/reflect" };
+  }
+  if (prefs.conversationInvites && savedCount > 0) {
+    return { kind: "conversation", icon: "conversations", line: INVITE_COPY.conversation[voice] || INVITE_COPY.conversation.gentle, cta: "Open saved", to: "/app/saved" };
+  }
+  return null;
+}
 
 const MONTHS = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"];
@@ -26,8 +58,9 @@ export default function Dashboard() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [reflectedAt, setReflectedAt] = useState(null);
-  const [showInvite, setShowInvite] = useState(false);
-  const [hasPriorCheckin, setHasPriorCheckin] = useState(false);
+  const [reflectDays, setReflectDays] = useState(null);
+  const [prefs, setPrefs] = useState(null);
+  const [savedCount, setSavedCount] = useState(0);
   const [identity, setIdentity] = useState(undefined);
   const [introDismissed, setIntroDismissed] = useState(true);
 
@@ -40,19 +73,19 @@ export default function Dashboard() {
       const d = snap.exists() ? snap.data() : {};
       setIdentity(d.identity || null);
       setIntroDismissed(!!d.identityIntroDismissed);
+      setPrefs(d.connectionPrefs || null);
+      setSavedCount((d.savedConversations || []).length);
     });
     getDoc(doc(db, "reflections", user.uid)).then((snap) => {
       const checkins = snap.exists() ? (snap.data().checkins || []) : [];
-      setHasPriorCheckin(checkins.length > 0);
       const last = checkins.reduce((m, c) => Math.max(m, c.createdAt || 0), 0);
-      const days = last ? (Date.now() - last) / 86400000 : Infinity;
-      // Gentle + periodic: only invite when it has been a while (or never).
-      setShowInvite(days >= 12);
+      setReflectDays(last ? (Date.now() - last) / 86400000 : Infinity);
     });
   }, [user]);
 
   const name = user?.displayName?.split(" ")[0] || "there";
   const quote = dailyPick(TETHRA_QUOTES);
+  const invitation = reflectDays !== null ? decideInvitation({ ...PREF_DEFAULTS, ...(prefs || {}) }, reflectDays, savedCount) : null;
 
   function dismissIdentityIntro() {
     setIntroDismissed(true);
@@ -134,19 +167,15 @@ export default function Dashboard() {
         </div>
       )}
 
-      {showInvite && (
+      {invitation && (
         <div className="card" style={{ marginTop: 12 }}>
           <div className="rowico" style={{ marginBottom: 4 }}>
-            <Icon name="reflection" size={30} />
-            <span className="small" style={{ fontWeight: 500 }}>A gentle moment for you</span>
+            <Icon name={invitation.icon} size={30} />
+            <span className="small" style={{ fontWeight: 500 }}>A quiet invitation</span>
           </div>
-          <p className="tiny muted" style={{ marginTop: 2, lineHeight: 1.55 }}>
-            {hasPriorCheckin
-              ? "Has anything changed since your last reflection? No pressure \u2014 just a moment to notice."
-              : "Whenever you\u2019re ready, take a moment to notice where you are today."}
-          </p>
-          <button className="btn btn-outline" style={{ marginTop: 10 }} onClick={() => nav("/app/reflect")}>
-            Reflect
+          <p className="tiny muted" style={{ marginTop: 2, lineHeight: 1.55 }}>{invitation.line}</p>
+          <button className="btn btn-outline" style={{ marginTop: 10 }} onClick={() => nav(invitation.to)}>
+            {invitation.cta}
           </button>
         </div>
       )}

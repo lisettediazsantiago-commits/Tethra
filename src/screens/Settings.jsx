@@ -4,6 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import IdentityAvatar, { SYMBOL_LABEL } from "../components/IdentityAvatar";
+import Icon from "../components/Icon";
 
 export default function Settings() {
   const { user, logout } = useAuth();
@@ -43,6 +44,15 @@ export default function Settings() {
         <span className="grow">
           <span className="t">How you&rsquo;re seen</span>
           <span className="s">{mark}</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
+      </button>
+
+      <button className="card entry-card" style={{ marginTop: 12, width: "100%" }} onClick={() => nav("/app/connection")}>
+        <Icon name="gentle-reminder" size={40} />
+        <span className="grow">
+          <span className="t">Connection preferences</span>
+          <span className="s">Gentle invitations, on your terms</span>
         </span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
       </button>
