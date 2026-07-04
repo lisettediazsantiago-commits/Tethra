@@ -64,14 +64,18 @@ export default function Snapshot() {
         </p>
       </div>
 
+      <button className="btn btn-outline" style={{ marginBottom: 16 }} onClick={() => nav("/app/sharing")}>
+        Choose what to share
+      </button>
+
       {!ready ? null : nothingShared ? (
         <div className="card">
           <p className="small" style={{ marginTop: 0, lineHeight: 1.6 }}>
             You haven&rsquo;t chosen to share anything yet, so a partner would see an empty snapshot.
             That&rsquo;s completely okay &mdash; you decide what to reveal, item by item, whenever you&rsquo;re ready.
           </p>
-          <button className="btn btn-outline" style={{ marginTop: 12 }} onClick={() => nav("/app/comfort-map")}>
-            Go to your Comfort Map
+          <button className="btn btn-outline" style={{ marginTop: 12 }} onClick={() => nav("/app/sharing")}>
+            Choose what to share
           </button>
         </div>
       ) : (
@@ -119,8 +123,7 @@ export default function Snapshot() {
       )}
 
       <p className="tiny faint center" style={{ marginTop: 18, lineHeight: 1.55 }}>
-        To change what appears here, adjust the share setting on each item in your Comfort Map and
-        Physical Intimacy Comfort.
+        To change what appears here, use &ldquo;Choose what to share&rdquo; above.
       </p>
     </div>
   );
