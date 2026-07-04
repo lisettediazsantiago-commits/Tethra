@@ -4,6 +4,7 @@ import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { BLUEPRINT, blueprintNarrative } from "../data/content";
+import BackBar from "../components/BackBar";
 
 function hasAny(a) {
   return !!(a && ((a.needs && a.needs.length) || a.pace || (a.safest && a.safest.length)));
@@ -82,6 +83,7 @@ export default function Blueprint() {
   if (mode === "view" && narrative) {
     return (
       <div className="screen">
+        <BackBar />
         <div className="head">
           <p className="eyebrow">Your relationship blueprint</p>
           <h1 className="display" style={{ marginTop: 6 }}>How you enter connection</h1>
@@ -118,6 +120,7 @@ export default function Blueprint() {
   // ---- Edit mode: the questionnaire ----
   return (
     <div className="screen">
+      <BackBar />
       <div className="head">
         <h1 className="display">Your blueprint</h1>
         <p className="small muted" style={{ marginTop: 6 }}>

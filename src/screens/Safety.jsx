@@ -1,4 +1,5 @@
 import { IconShield } from "../components/Icons";
+import BackBar from "../components/BackBar";
 
 // NOTE FOR THE BUILDER: verify and localize these resources for your users'
 // region before launch. The numbers below are long-standing US services shown
@@ -12,6 +13,7 @@ const RESOURCES = [
 export default function Safety() {
   return (
     <div className="screen">
+      <BackBar fallback="/" />
       <div className="head">
         <div className="emblem" style={{ marginBottom: 12 }}><IconShield width={22} height={22} /></div>
         <h1 className="display">Safety &amp; support</h1>

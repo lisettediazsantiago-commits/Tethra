@@ -4,6 +4,7 @@ import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { JOURNAL_PROMPTS } from "../data/content";
 import Icon from "../components/Icon";
+import BackBar from "../components/BackBar";
 
 // A lightweight, fully private journal (v1.1 §10). Entries live inside the
 // existing owner-only reflections/{uid} document (a `journal` array), so no
@@ -71,6 +72,7 @@ export default function Journal() {
 
   return (
     <div className="screen">
+      <BackBar />
       <div className="head">
         <div className="rowico" style={{ marginBottom: 8 }}>
           <Icon name="journal" size={34} />

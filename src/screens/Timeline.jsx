@@ -4,6 +4,7 @@ import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { GROWTH_PROMPTS, dailyPick } from "../data/content";
 import Icon from "../components/Icon";
+import BackBar from "../components/BackBar";
 
 // Growth Timeline (v1.1 §9): a completely private, self-authored timeline of how
 // someone has evolved. Stored in the existing reflections/{uid} doc as a
@@ -63,6 +64,7 @@ export default function Timeline() {
 
   return (
     <div className="screen">
+      <BackBar />
       <div className="head">
         <div className="rowico" style={{ marginBottom: 8 }}>
           <Icon name="growth" size={34} />

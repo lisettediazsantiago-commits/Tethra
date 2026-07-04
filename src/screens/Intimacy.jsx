@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { INTIMACY_SECTION } from "../data/content";
 import Icon from "../components/Icon";
 import IntimacyPanel from "../components/IntimacyPanel";
+import BackBar from "../components/BackBar";
 
 // Standalone /app/intimacy screen. The body now lives in the shared
 // <IntimacyPanel /> so this page and the inline Comfort Map view stay in sync.
@@ -10,6 +11,7 @@ export default function Intimacy() {
 
   return (
     <div className="screen">
+      <BackBar />
       {/* Entry hero */}
       <div className="intimacy-hero">
         <div className="rowico" style={{ marginBottom: 8 }}>

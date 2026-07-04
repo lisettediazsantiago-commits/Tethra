@@ -5,6 +5,7 @@ import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { COMFORT_CATEGORIES, INTIMACY_CATEGORIES, blueprintNarrative } from "../data/content";
 import Icon from "../components/Icon";
+import BackBar from "../components/BackBar";
 
 // My Snapshot (v1.1 §5): a read-only preview of exactly what a partner would see.
 // It never exposes anything new — it faithfully mirrors the sharing controls the
@@ -50,6 +51,7 @@ export default function Snapshot() {
 
   return (
     <div className="screen">
+      <BackBar fallback="/app/shared" />
       <div className="head">
         <div className="rowico" style={{ marginBottom: 8 }}>
           <Icon name="privacy" size={34} />
