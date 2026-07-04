@@ -386,6 +386,15 @@ export default function SharedSpace() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
       </button>
 
+      <button className="card entry-card" style={{ marginBottom: 12, width: "100%" }} onClick={() => nav("/app/saved")}>
+        <span style={{ width: 40, height: 40, borderRadius: "50%", background: "#F0E9F6", color: "#8B6BA6", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}><Heart s={20} filled /></span>
+        <span className="grow">
+          <span className="t">Saved conversations</span>
+          <span className="s">{saved.length > 0 ? `${saved.length} kept to come back to` : "Tap the heart on any difference to keep it here"}</span>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
+      </button>
+
       {!ready ? null : connected ? (
         <>
           <div className="card" style={{ marginBottom: 14 }}>
