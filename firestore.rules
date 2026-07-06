@@ -76,6 +76,26 @@ service cloud.firestore {
       );
 
       allow delete: if signedIn() && resource.data.createdBy == request.auth.uid;
+
+      // Gentle conversations. Topic threads and their notes live UNDER the space,
+      // readable/writable only by its two members. Membership is checked against
+      // the parent space doc. Notes are gentle by design: a person may edit or
+      // delete only their own note; no one can rewrite the other's words.
+      function spaceMember() {
+        let s = get(/databases/$(database)/documents/sharedSpaces/$(code)).data;
+        return signedIn() && (s.createdBy == request.auth.uid || s.invitedUserId == request.auth.uid);
+      }
+
+      match /threads/{threadId} {
+        allow read, create, update: if spaceMember();
+        allow delete: if spaceMember() && resource.data.createdBy == request.auth.uid;
+
+        match /messages/{messageId} {
+          allow read: if spaceMember();
+          allow create: if spaceMember() && request.resource.data.senderUid == request.auth.uid;
+          allow update, delete: if spaceMember() && resource.data.senderUid == request.auth.uid;
+        }
+      }
     }
   }
 }
