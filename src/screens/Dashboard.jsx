@@ -119,6 +119,7 @@ export default function Dashboard() {
       labelColor: "#B06B84",
       items: [
         { to: "/app/shared", icon: "shared-space", title: "Shared space", sub: "Understand each other, gently" },
+        { to: "/app/conversations", icon: "conversations", title: "Gentle conversations", sub: "Leave each other notes, at your pace" },
         { to: "/app/check-in", icon: "check-in", title: "Consent check-in", sub: "Before or after time together" },
       ],
     },
