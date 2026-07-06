@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { TETHRA_QUOTES, dailyPick } from "../data/content";
@@ -63,6 +63,7 @@ export default function Dashboard() {
   const [savedCount, setSavedCount] = useState(0);
   const [identity, setIdentity] = useState(undefined);
   const [introDismissed, setIntroDismissed] = useState(true);
+  const [noteWaiting, setNoteWaiting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -75,6 +76,16 @@ export default function Dashboard() {
       setIntroDismissed(!!d.identityIntroDismissed);
       setPrefs(d.connectionPrefs || null);
       setSavedCount((d.savedConversations || []).length);
+      const spaceId = d.sharedSpaceId;
+      if (spaceId) {
+        getDocs(collection(db, "sharedSpaces", spaceId, "threads")).then((qs) => {
+          const waiting = qs.docs.some((t) => {
+            const x = t.data();
+            return x.lastSenderUid && x.lastSenderUid !== user.uid;
+          });
+          setNoteWaiting(waiting);
+        }).catch(() => { /* no dot if we can't read; never blocks the dashboard */ });
+      }
     });
     getDoc(doc(db, "reflections", user.uid)).then((snap) => {
       const checkins = snap.exists() ? (snap.data().checkins || []) : [];
@@ -119,7 +130,7 @@ export default function Dashboard() {
       labelColor: "#B06B84",
       items: [
         { to: "/app/shared", icon: "shared-space", title: "Shared space", sub: "Understand each other, gently" },
-        { to: "/app/conversations", icon: "conversations", title: "Gentle conversations", sub: "Leave each other notes, at your pace" },
+        { to: "/app/conversations", icon: "conversations", title: "Gentle conversations", sub: "Leave each other notes, at your pace", dot: noteWaiting },
         { to: "/app/check-in", icon: "check-in", title: "Consent check-in", sub: "Before or after time together" },
       ],
     },
@@ -193,6 +204,10 @@ export default function Dashboard() {
                   <span className="t">{l.title}</span>
                   <span className="s">{l.sub}</span>
                 </span>
+                {l.dot && (
+                  <span aria-label="A note is waiting" title="A note is waiting"
+                    style={{ width: 9, height: 9, borderRadius: "50%", background: "var(--blush)", flex: "none", marginRight: 6 }} />
+                )}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--tethra-lavender)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flex: "none" }}><path d="M9 6l6 6-6 6" /></svg>
               </button>
             ))}
